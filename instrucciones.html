@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrucciones Visuales - Portal Educativo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2d6a4f, #40916c);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #2d6a4f;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #40916c;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            color: #40916c;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .seccion {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 5px solid #2d6a4f;
+            border-radius: 5px;
+        }
+        
+        .paso {
+            margin-bottom: 20px;
+        }
+        
+        .numero {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #2d6a4f;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .diagrama {
+            background: white;
+            padding: 20px;
+            border: 2px dashed #40916c;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        .caja {
+            background: #d8f3dc;
+            border: 2px solid #2d6a4f;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: inline-block;
+            min-width: 200px;
+        }
+        
+        .flecha {
+            color: #2d6a4f;
+            font-weight: bold;
+            margin: 0 10px;
+        }
+        
+        .tabla {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .tabla th {
+            background: #2d6a4f;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .tabla td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tabla tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .alerta {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .exito {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .codigo {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            border: 1px solid #dee2e6;
+        }
+        
+        .boton-volver {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #2d6a4f;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .boton-volver:hover {
+            background: #40916c;
+        }
+        
+        footer {
+            background: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📘 Instrucciones Visuales - Portal Educativo</h1>
+        <p>Guía completa con diagramas de flujo para administradores</p>
+    </header>
+    
+    <div class="container">
+        <div class="content">
+            
+            <!-- FLUJO GENERAL -->
+            <h2>🔄 Flujo General del Portal</h2>
+            <div class="diagrama">
+                <div class="caja">📱 Usuario (Estudiante)</div>
+                <div class="flecha">↓</div>
+                <div class="caja">🌐 Abre index.html</div>
+                <div class="flecha">↓</div>
+                <div class="caja">📖 Navega por secciones</div>
+                <div class="flecha">↓</div>
+                <div class="caja">💬 Lee y comenta</div>
+            </div>
+            
+            <div class="diagrama">
+                <div class="caja">👨‍🏫 Docente</div>
+                <div class="flecha">↓</div>
+                <div class="caja">🔐 Abre Panel Docente</div>
+                <div class="flecha">↓</div>
+                <div class="caja">🔑 Inicia Sesión</div>
+                <div class="flecha">↓</div>
+                <div class="caja">📤 Carga contenido</div>
+            </div>
+            
+            <!-- ACCESO ESTUDIANTE -->
+            <div class="seccion">
+                <h2>👨‍🎓 Flujo: Acceso para Estudiantes</h2>
+                
+                <div class="paso">
+                    <span class="numero">1</span>
+                    <strong>Abrir el portal</strong>
+                    <p>El estudiante abre el archivo <code>index.html</code> en su navegador (Chrome, Firefox, Safari, Edge)</p>
+                </div>
+                
+                <div class="paso">
+                    <span class="numero">2</span>
+                    <strong>Explorar el sitio</strong>
+                    <p>Navega por los menús: Inicio, Arte, Literatura, Convivencia, Eventos</p>
+                </div>
+                
+                <div class="paso">
+                    <span class="numero">3</span>
+                    <strong>Ver contenido de docentes</strong>
+                    <p>Cada sección muestra el contenido que los docentes han cargado</p>
+                </div>
+                
+                <div class="paso">
+                    <span class="numero">4</span>
+                    <strong>Dejar comentarios</strong>
+                    <p>Completa el formulario de comentarios y haz clic en "Enviar"</p>
+                </div>
+                
+                <div class="exito">
+                    ✅ El comentario se guarda automáticamente y aparece en la página
+                </div>
+            </div>
+            
+            <!-- ACCESO DOCENTE -->
+            <div class="seccion">
+                <h2>👨‍🏫 Flujo: Acceso para Docentes</h2>
+                
+                <div class="paso">
+                    <span class="numero">1</span>
+                    <strong>Entrar al Panel Docente</strong>
+                    <p>Haz clic en el botón "Panel Docente" en la navegación</p>
+                </div>
+                
+                <div class="paso">
+                    <span class="numero">2</span>
+                    <strong>Iniciar Sesión</strong>
+                    <p>
+                        Usuario: <code>docente</code><br>
+                        Contraseña: <code>123456</code>
+                    </p>
+                </div>
+                
+                <div class="paso">
+                    <span class="numero">3</span>
+                    <strong>Rellenar formulario de carga</strong>
+                    <ul>
+                        <li><strong>Sección:</strong> Elige dónde aparecerá (Arte, Literatura, Convivencia, Eventos)</li>
+                        <li><strong>Título:</strong> Nombre del contenido</li>
+                        <li><strong>Descripción:</strong> Explicación breve (máx 500 caracteres)</li>
+                        <li><strong>Enlace:</strong> URL a recurso (Google Drive, YouTube, PDF, etc)</li>
+                    </ul>
+                </div>
+                
+                <div class="paso">
+                    <span class="numero">4</span>
+                    <strong>Cargar contenido</strong>
+                    <p>Haz clic en "Cargar Contenido"</p>
+                </div>
+                
+                <div class="exito">
+                    ✅ El contenido aparece inmediatamente en la sección correspondiente<br>
+                    ✅ Los estudiantes pueden verlo cuando abren esa página
+                </div>
+                
+                <div class="paso">
+                    <span class="numero">5</span>
+                    <strong>Gestionar contenido</strong>
+                    <p>
+                        Puedes:<br>
+                        • Ver todo tu contenido por sección<br>
+                        • Hacer clic en "Ver recurso" para abrir enlaces<br>
+                        • Eliminar contenido si es necesario
+                    </p>
+                </div>
+            </div>
+            
+            <!-- MATRIZ DE CARACTERÍSTICAS -->
+            <div class="seccion">
+                <h2>✨ Características Disponibles</h2>
+                
+                <table class="tabla">
+                    <tr>
+                        <th>Característica</th>
+                        <th>Estudiantes</th>
+                        <th>Docentes</th>
+                        <th>Notas</th>
+                    </tr>
+                    <tr>
+                        <td>Ver secciones del portal</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>Acceso público</td>
+                    </tr>
+                    <tr>
+                        <td>Leer contenido de docentes</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>A medida que se carga</td>
+                    </tr>
+                    <tr>
+                        <td>Dejar comentarios</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>Se guardan en el navegador</td>
+                    </tr>
+                    <tr>
+                        <td>Cargar contenido</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>Requiere login</td>
+                    </tr>
+                    <tr>
+                        <td>Ver estadísticas</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>Total de contenidos y comentarios</td>
+                    </tr>
+                    <tr>
+                        <td>Eliminar contenido</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>Solo su propio contenido</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- ALMACENAMIENTO DE DATOS -->
+            <div class="seccion">
+                <h2>💾 Dónde se guardan los datos</h2>
+                
+                <div class="diagrama">
+                    <strong>DATOS</strong>
+                    <div class="flecha">↓</div>
+                    <div class="caja">localStorage del navegador</div>
+                    <div class="flecha">↓</div>
+                    <strong>VISIBLES EN: Chrome, Firefox, Safari, Edge (por separado)</strong>
+                </div>
+                
+                <div class="alerta">
+                    ⚠️ <strong>Importante:</strong> Los datos se guardan POR NAVEGADOR. Si abres el portal en:
+                    <ul style="margin-top: 10px;">
+                        <li><strong>Chrome:</strong> Los datos se guardan ahí</li>
+                        <li><strong>Firefox:</strong> Los datos son diferentes</li>
+                        <li><strong>Safari en otro PC:</strong> No ve los datos</li>
+                    </ul>
+                </div>
+                
+                <p><strong>Para producción real:</strong> Se recomienda usar una base de datos SQL con servidor backend.</p>
+            </div>
+            
+            <!-- EJEMPLO PRÁCTICO -->
+            <div class="seccion">
+                <h2>📝 Ejemplo Práctico Completo</h2>
+                
+                <h3>Escenario: Docente de Arte quiere compartir tutorial de pintura</h3>
+                
+                <ol style="line-height: 2;">
+                    <li>Docente entra a <strong>Panel Docente</strong></li>
+                    <li>Login: docente / 123456</li>
+                    <li>Completa formulario:
+                        <div class="codigo">
+Sección: 🎨 Arte
+Título: Técnicas de Acrílico para Principiantes
+Descripción: Video tutorial completo (15 min) sobre materiales, mezcla de colores y primeros proyectos
+Enlace: https://youtu.be/video123
+                        </div>
+                    </li>
+                    <li>Haz clic en "Cargar Contenido"</li>
+                    <li>✅ Éxito: El contenido aparece en la página Arte</li>
+                    <li>Los estudiantes ven el contenido cuando abren "Arte"</li>
+                    <li>Pueden ver el video haciendo clic en "📎 Ver recurso"</li>
+                    <li>Pueden comentar sus opiniones sobre el tutorial</li>
+                </ol>
+                
+                <div class="exito">
+                    Resultado: Docente comparte contenido ↔ Estudiantes aprenden e interactúan
+                </div>
+            </div>
+            
+            <!-- CONFIGURACIÓN Y MANTENIMIENTO -->
+            <div class="seccion">
+                <h2>⚙️ Configuración y Mantenimiento</h2>
+                
+                <h3>Cambiar contraseña docente (por administrador TI)</h3>
+                <p>Edita el archivo <code>js/admin.js</code>, busca la sección "usuariosValidos" y modifica:</p>
+                <div class="codigo">
+const usuariosValidos = {
+    'docente': 'nueva_password_aqui',
+    'admin@colegio.edu': 'otra_password_aqui'
+};
+                </div>
+                
+                <h3>Cambiar colores del portal</h3>
+                <p>Edita <code>css/estilos.css</code>, busca "#2d6a4f" y reemplaza con tu color.</p>
+                
+                <h3>Limpiar todos los datos</h3>
+                <p>En la consola del navegador (F12), ejecuta:</p>
+                <div class="codigo">
+localStorage.clear();
+location.reload();
+                </div>
+                
+                <h3>Pre-cargar datos de demostración</h3>
+                <p>Abre <code>datos-demo.js</code> en la consola (F12) para cargar ejemplos.</p>
+            </div>
+            
+            <!-- RESOLUCIÓN DE PROBLEMAS -->
+            <div class="seccion">
+                <h2>🔧 Resolución de Problemas Comunes</h2>
+                
+                <h3>❓ "No veo el contenido que cargué"</h3>
+                <p>✅ Solución:</p>
+                <ul>
+                    <li>Recarga la página (F5)</li>
+                    <li>Verifica estar en la sección correcta</li>
+                    <li>Intenta en otro navegador</li>
+                </ul>
+                
+                <h3>❓ "Veo datos de otro usuario"</h3>
+                <p>✅ Solución:</p>
+                <ul>
+                    <li>Estás en otro navegador (cada uno tiene sus datos)</li>
+                    <li>Abre en el MISMO navegador que el usuario original</li>
+                </ul>
+                
+                <h3>❓ "Todos los comentarios desaparecieron"</h3>
+                <p>✅ Solución:</p>
+                <ul>
+                    <li>Se borraron al limpiar caché</li>
+                    <li>No se puede recuperar (sin servidor)</li>
+                    <li>Prevención: Hacer backups periódicos (copiar contenido)</li>
+                </ul>
+                
+                <h3>❓ "Quiero cambiar algo del diseño"</h3>
+                <p>✅ Solución:</p>
+                <ul>
+                    <li>Edita archivos HTML y CSS</li>
+                    <li>Recarga el navegador para ver cambios</li>
+                    <li>No hay compilación necesaria</li>
+                </ul>
+            </div>
+            
+            <!-- RECOMENDACIONES -->
+            <div class="seccion">
+                <h2>💡 Recomendaciones para el Colegio</h2>
+                
+                <ol style="line-height: 2;">
+                    <li><strong>Capacitación:</strong> Entrenar docentes en 1-2 horas</li>
+                    <li><strong>Acceso:</strong> Dejar el archivo en servidor de la institución</li>
+                    <li><strong>Backup:</strong> Hacer copias de seguridad cada mes</li>
+                    <li><strong>Monitoreo:</strong> Revisar comentarios regularmente</li>
+                    <li><strong>Futuro:</strong> Considerar backend real para datos persistentes</li>
+                    <li><strong>Documentación:</strong> Guardar este archivo de instrucciones</li>
+                </ol>
+            </div>
+            
+            <a href="index.html" class="boton-volver">← Volver al Portal</a>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Portal Educativo - Institución Educativa Rural Reina Baja</p>
+        <p>Guía de Instrucciones Visuales v1.0 - Mayo 2026</p>
+    </footer>
+</body>
+</html>
