@@ -214,159 +214,252 @@ function guardarContenido(e) {
     mostrarExito('Contenido cargado correctamente');
 }
 
-function mostrarSeccion(seccion) {
+async function mostrarSeccion(seccion) {
+
     seccionActual = seccion;
-    
+
     // Actualizar botones
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('activo');
     });
+
     document.querySelector(`[data-seccion="${seccion}"]`).classList.add('activo');
-    
-    // Obtener contenido
-    let contenido = DB.obtenerContenido(seccion);
+
     let lista = document.getElementById('contenido-lista');
-    
-    if(contenido.length === 0) {
-        lista.innerHTML = '<p class="sin-contenido">No hay contenido cargado en esta sección</p>';
+
+    lista.innerHTML = "<p>Cargando...</p>";
+
+    const { data, error } = await supabaseClient
+    .from("publicaciones")
+    .select("*")
+    .eq("seccion", seccion)
+    .order("id", { ascending: false });
+
+    console.log("Sección:", seccion);
+    console.log("Datos:", data);
+    console.log("Error:", error);
+
+    if (error) {
+        console.error(error);
+        lista.innerHTML = "<p>Error al cargar contenido.</p>";
         return;
     }
-    
-    lista.innerHTML = '';
-    
-    contenido.forEach(item => {
-        let card = document.createElement('div');
-        card.className = 'contenido-card';
+
+    if (data.length === 0) {
+        lista.innerHTML = '<p class="sin-contenido">No hay contenido cargado en esta sección.</p>';
+        return;
+    }
+
+    lista.innerHTML = "";
+
+    data.forEach(item => {
+
+        let card = document.createElement("div");
+
+        card.className = "contenido-card";
+
         card.innerHTML = `
             <div class="contenido-header">
                 <h4>${sanitizarHTML(item.titulo)}</h4>
-                <span class="fecha">${item.fecha}</span>
             </div>
+
             <p>${sanitizarHTML(item.descripcion)}</p>
-            ${item.archivo ? `
-                <a href="${item.archivo}" target="_blank" class="btn-secundario" rel="noopener noreferrer">
-                    📎 Ver recurso
-                </a>
-            ` : ''}
+
+            ${item.url_archivo ?
+            `<a href="${item.url_archivo}" target="_blank" class="btn-secundario">
+                📎 Ver recurso
+            </a>` : ""}
+
             <button onclick="eliminarContenido('${seccion}', ${item.id})" class="btn-eliminar">
                 🗑️ Eliminar
             </button>
         `;
+
         lista.appendChild(card);
+
     });
+
 }
 
-function eliminarContenido(seccion, id) {
-    if(!confirm('¿Eliminar este contenido?')) return;
-    
-    let contenido = JSON.parse(localStorage.getItem('colegio_contenido')) || {};
-    contenido[seccion] = contenido[seccion].filter(item => item.id !== id);
-    localStorage.setItem('colegio_contenido', JSON.stringify(contenido));
-    
-    mostrarSeccion(seccion);
-    cargarEstadisticas();
-    mostrarExito('Contenido eliminado');
+async function eliminarContenido(seccion, id) {
+
+    if (!confirm("¿Eliminar este contenido?")) return;
+
+    const { error } = await supabaseClient
+        .from("publicaciones")
+        .delete()
+        .eq("id", id);
+
+    console.log("ID a eliminar:", id);
+    console.log("Resultado DELETE:", error);
+
+    if (error) {
+        console.error("❌ Error al eliminar:", error);
+        mostrarError("No fue posible eliminar el contenido.");
+        return;
+    }
+
+    await mostrarSeccion(seccion);
+    await cargarEstadisticas();
+    mostrarExito("✅ Contenido eliminado correctamente");
 }
 
 // =========================
 // ESTADÍSTICAS
 // =========================
 
-function cargarEstadisticas() {
-    let contenido = JSON.parse(localStorage.getItem('colegio_contenido')) || {};
-    let comentarios = JSON.parse(localStorage.getItem('colegio_comentarios')) || {};
-    let publicaciones = JSON.parse(localStorage.getItem('colegio_publicaciones_inicio')) || [];
-    
-    let totalContenido = Object.values(contenido).reduce((sum, arr) => sum + arr.length, 0);
-    let totalComentarios = Object.values(comentarios).reduce((sum, arr) => sum + arr.length, 0);
-    let seccionesConContenido = Object.values(contenido).filter(arr => arr.length > 0).length;
-    let comentariosPendientes = Object.values(comentarios).reduce((sum, arr) => sum + arr.filter(c => !c.aprobado).length, 0);
-    
-    document.getElementById('stat-total').textContent = totalContenido;
-    document.getElementById('stat-comentarios').textContent = totalComentarios;
-    document.getElementById('stat-secciones').textContent = seccionesConContenido;
-    
-    // Actualizar estadísticas de comentarios pendientes si existen
-    let statPendientes = document.getElementById('stat-pendientes');
-    if(statPendientes) {
-        statPendientes.textContent = comentariosPendientes;
+async function cargarEstadisticas() {
+
+    // PUBLICACIONES
+    const { data: publicaciones, error } = await supabaseClient
+        .from("publicaciones")
+        .select("seccion");
+
+    if (error) {
+        console.error("Error cargando estadísticas:", error);
+        return;
     }
+
+    const totalContenido = publicaciones.length;
+
+    const secciones = [...new Set(publicaciones.map(p => p.seccion))];
+
+    document.getElementById("stat-total").textContent = totalContenido;
+
+    document.getElementById("stat-secciones").textContent = secciones.length;
+
+    // Por ahora siguen en 0 hasta migrar comentarios
+    document.getElementById("stat-comentarios").textContent = "0";
+
+    const pendientes = document.getElementById("stat-pendientes");
+
+    if (pendientes) {
+        pendientes.textContent = "0";
+    }
+
 }
 
-// =========================
-// GESTIÓN DE PUBLICACIONES DEL INICIO
-// =========================
+async function guardarPublicacionInicio(e) {
 
-function guardarPublicacionInicio(e) {
     e.preventDefault();
-    
-    let usuario = JSON.parse(localStorage.getItem('usuario_actual'));
+
     let titulo = document.getElementById('titulo-pub').value.trim();
     let contenido = document.getElementById('contenido-pub').value.trim();
-    
-    if(titulo.length < 5) {
+
+    if (titulo.length < 5) {
         mostrarError('El título debe tener al menos 5 caracteres');
         return;
     }
-    
-    if(contenido.length < 10) {
+
+    if (contenido.length < 10) {
         mostrarError('El contenido debe tener al menos 10 caracteres');
         return;
     }
-    
-    // Agregar publicación
-    DB.agregarPublicacionInicio(titulo, contenido, usuario.nombre);
-    
+
+    const { error } = await supabaseClient
+        .from("publicaciones")
+        .insert([
+            {
+                seccion: "inicio",
+                titulo: titulo,
+                descripcion: contenido
+            }
+        ]);
+
+    if (error) {
+        console.error("❌ Error al guardar:", error);
+        mostrarError("No fue posible guardar la publicación.");
+        return;
+    }
+
     // Limpiar formulario
     document.querySelector('.form-publicacion').reset();
-    
+
     // Actualizar vista
-    cargarPublicacionesAdmin();
-    cargarEstadisticas();
-    
-    mostrarExito('Publicación agregada correctamente');
+    await cargarPublicacionesAdmin();
+    await cargarEstadisticas();
+
+    mostrarExito("✅ Publicación agregada correctamente");
+
 }
 
-function cargarPublicacionesAdmin() {
-    let publicaciones = DB.obtenerPublicacionesInicio();
-    let lista = document.getElementById('publicaciones-lista');
-    
-    if(!lista) return;
-    
-    if(publicaciones.length === 0) {
+async function cargarPublicacionesAdmin() {
+
+    let lista = document.getElementById("publicaciones-lista");
+
+    if (!lista) return;
+
+    lista.innerHTML = "<p>Cargando publicaciones...</p>";
+
+    const { data, error } = await supabaseClient
+        .from("publicaciones")
+        .select("*")
+        .eq("seccion", "inicio")
+        .order("id", { ascending: false });
+
+    if (error) {
+        console.error("❌ Error al cargar publicaciones:", error);
+        lista.innerHTML = "<p>Error al cargar publicaciones.</p>";
+        return;
+    }
+
+    if (data.length === 0) {
         lista.innerHTML = '<p class="sin-contenido">No hay publicaciones aún</p>';
         return;
     }
-    
-    lista.innerHTML = '';
-    
-    publicaciones.forEach(pub => {
-        let card = document.createElement('div');
-        card.className = 'contenido-card';
+
+    lista.innerHTML = "";
+
+    data.forEach(pub => {
+
+        let card = document.createElement("div");
+        card.className = "contenido-card";
+
         card.innerHTML = `
             <div class="contenido-header">
                 <h4>${sanitizarHTML(pub.titulo)}</h4>
-                <span class="fecha">${pub.fecha} - ${pub.hora}</span>
             </div>
-            <p><strong>Por:</strong> ${sanitizarHTML(pub.autor)}</p>
-            <p>${sanitizarHTML(pub.contenido)}</p>
+
+            <p>${sanitizarHTML(pub.descripcion)}</p>
+
+            ${pub.url_archivo ? `
+                <a href="${pub.url_archivo}" target="_blank" class="btn-secundario">
+                    📎 Ver archivo
+                </a>
+            ` : ""}
+
             <button onclick="eliminarPublicacionInicio(${pub.id})" class="btn-eliminar">
                 🗑️ Eliminar
             </button>
         `;
+
         lista.appendChild(card);
+
     });
+
 }
 
-function eliminarPublicacionInicio(id) {
-    if(!confirm('¿Eliminar esta publicación?')) return;
-    
-    DB.eliminarPublicacionInicio(id);
-    cargarPublicacionesAdmin();
-    cargarEstadisticas();
-    mostrarExito('Publicación eliminada');
-}
+async function eliminarPublicacionInicio(id) {
 
+    if (!confirm("¿Eliminar esta publicación?")) return;
+
+    const { error } = await supabaseClient
+        .from("publicaciones")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        console.error("❌ Error al eliminar:", error);
+        mostrarError("No fue posible eliminar la publicación.");
+        return;
+    }
+
+    await cargarPublicacionesAdmin();
+    await cargarEstadisticas();
+
+    mostrarExito("✅ Publicación eliminada correctamente");
+
+}
 // =========================
 // GESTIÓN DE COMENTARIOS - APROBACIÓN
 // =========================

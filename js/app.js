@@ -1,7 +1,7 @@
 // =========================
 // SISTEMA DE ALMACENAMIENTO
 // =========================
-
+console.log("APP.JS VERSION NUEVA");
 const DB = {
     // Inicializar base de datos local
     init: function() {
@@ -25,20 +25,26 @@ const DB = {
         }
     },
     
-    agregarPublicacionInicio: function(titulo, contenido, autor) {
-        let publicaciones = JSON.parse(localStorage.getItem('colegio_publicaciones_inicio')) || [];
-        
-        publicaciones.push({
-            id: Date.now(),
-            titulo: titulo,
-            contenido: contenido,
-            autor: autor,
-            fecha: new Date().toLocaleDateString('es-ES'),
-            hora: new Date().toLocaleTimeString('es-ES')
-        });
-        
-        localStorage.setItem('colegio_publicaciones_inicio', JSON.stringify(publicaciones));
-        return publicaciones;
+    agregarPublicacionInicio: async function(titulo, contenido, autor) {
+
+        const { error } = await supabaseClient
+            .from("publicaciones")
+            .insert([
+                {
+                    titulo: titulo,
+                    descripcion: contenido,
+                    seccion: "inicio"
+                }
+            ]);
+
+        if (error) {
+            console.error("❌ Error al guardar publicación:", error);
+            return false;
+        }
+
+        console.log("✅ Publicación guardada correctamente");
+
+        return true;
     },
     
     obtenerPublicacionesInicio: function() {
@@ -107,21 +113,27 @@ const DB = {
         return true;
     },
     
-    agregarContenido: function(seccion, titulo, descripcion, archivo) {
-        let contenido = JSON.parse(localStorage.getItem('colegio_contenido')) || {};
-        
-        if (contenido[seccion]) {
-            contenido[seccion].push({
-                id: Date.now(),
-                titulo: titulo,
-                descripcion: descripcion,
-                archivo: archivo,
-                fecha: new Date().toLocaleDateString('es-ES')
-            });
-            localStorage.setItem('colegio_contenido', JSON.stringify(contenido));
-            return true;
+    agregarContenido: async function(seccion, titulo, descripcion, archivo) {
+
+        const { error } = await supabaseClient
+            .from("publicaciones")
+            .insert([
+                {
+                    titulo: titulo,
+                    descripcion: descripcion,
+                    seccion: seccion,
+                    url_archivo: archivo || null
+                }
+            ]);
+
+        if (error) {
+            console.error("❌ Error al guardar contenido:", error);
+            return false;
         }
-        return false;
+
+        console.log("✅ Contenido guardado en Supabase");
+
+        return true;
     },
     
     obtenerContenido: function(seccion) {
@@ -160,18 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// =========================
-// BOTON EXPLORAR
-// =========================
-
-function irExplorar(){
-    let seccion = document.getElementById("explorar");
-    if(seccion){
-        seccion.scrollIntoView({
-            behavior: "smooth"
-        });
-    }
-}
 
 // =========================
 // COMENTARIOS
@@ -301,80 +301,124 @@ function sanitizarHTML(texto) {
 // Cargar comentarios al entrar a página
 document.addEventListener('DOMContentLoaded', cargarComentarios);
 
+
 // =========================
 // PUBLICACIONES DEL INICIO
 // =========================
 
-function cargarPublicacionesInicio() {
-    let publicaciones = DB.obtenerPublicacionesInicio();
+async function cargarPublicacionesInicio() {
+
     let contenedor = document.querySelector(".contenedor-publicaciones");
-    
-    if(!contenedor) return;
-    
-    // Limpiar publicaciones anteriores (excepto predefinidas)
-    let publicacionesUI = contenedor.querySelectorAll('.publicacion[data-id]');
-    publicacionesUI.forEach(p => p.remove());
-    
-    if(publicaciones.length === 0) {
+
+    if (!contenedor) return;
+
+    contenedor.innerHTML = "<p class='sin-publicaciones'>Cargando publicaciones...</p>";
+
+    const { data, error } = await supabaseClient
+        .from("publicaciones")
+        .select("*")
+        .eq("seccion", "inicio")
+        .order("id", { ascending: false });
+
+    if (error) {
+        console.error("❌ Error al cargar publicaciones:", error);
+        contenedor.innerHTML = "<p class='sin-publicaciones'>Error al cargar publicaciones.</p>";
         return;
     }
-    
-    publicaciones.forEach(pub => {
+
+    contenedor.innerHTML = "";
+
+    if (data.length === 0) {
+        contenedor.innerHTML = "<p class='sin-publicaciones'>No hay publicaciones.</p>";
+        return;
+    }
+
+    data.forEach(item => {
+
         let publicacion = document.createElement("div");
-        publicacion.className = 'publicacion';
-        publicacion.setAttribute("data-id", pub.id);
-        
+        publicacion.className = "publicacion";
+
         publicacion.innerHTML = `
             <div class="publicacion-header">
-                <h3>${sanitizarHTML(pub.titulo)}</h3>
-                <span class="autor-publicacion">📝 ${sanitizarHTML(pub.autor)}</span>
+                <h3>${sanitizarHTML(item.titulo)}</h3>
             </div>
-            <p class="fecha-publicacion">${pub.fecha} - ${pub.hora}</p>
-            <p>${sanitizarHTML(pub.contenido)}</p>
+
+            <p>${sanitizarHTML(item.descripcion)}</p>
+
+            ${item.url_archivo ? `
+                <p>
+                    <a href="${item.url_archivo}" target="_blank">
+                        📎 Ver archivo
+                    </a>
+                </p>
+            ` : ""}
         `;
-        
+
         contenedor.appendChild(publicacion);
+
     });
+
 }
 
 // =========================
 // PUBLICACIONES DE SECCIONES (Arte, Convivencia, Eventos)
 // =========================
 
-function cargarPublicacionesSeccion(seccion) {
+async function cargarPublicacionesSeccion(seccion) {
+
     let contenedor = document.querySelector(".publicaciones-seccion .contenedor-publicaciones");
-    
-    if(!contenedor) return;
-    
-    let contenido = DB.obtenerContenido(seccion);
-    
-    // Limpiar contenido anterior
-    let publicacionesUI = contenedor.querySelectorAll('.publicacion[data-id]');
-    publicacionesUI.forEach(p => p.remove());
-    
-    // Limpiar mensaje de sin publicaciones si hay contenido
-    if(contenido.length > 0) {
-        let sinPublicaciones = contenedor.querySelector('.sin-publicaciones');
-        if(sinPublicaciones) sinPublicaciones.remove();
+
+    if (!contenedor) return;
+
+    contenedor.innerHTML = "<p class='sin-publicaciones'>Cargando contenido...</p>";
+
+    const { data, error } = await supabaseClient
+        .from("publicaciones")
+        .select("*")
+        .eq("seccion", seccion)
+        .order("id", { ascending: false });
+
+    console.log("Sección solicitada:", seccion);
+    console.log("Datos recibidos:", data);    
+
+    if (error) {
+        console.error("❌ Error al cargar publicaciones:", error);
+        contenedor.innerHTML = "<p class='sin-publicaciones'>Error al cargar publicaciones.</p>";
+        return;
     }
-    
-    // Agregar contenido
-    contenido.forEach(item => {
+
+    contenedor.innerHTML = "";
+
+    if (data.length === 0) {
+        contenedor.innerHTML = "<p class='sin-publicaciones'>No hay publicaciones.</p>";
+        return;
+    }
+
+    data.forEach(item => {
+
         let publicacion = document.createElement("div");
-        publicacion.className = 'publicacion';
-        publicacion.setAttribute("data-id", item.id);
-        
+        publicacion.className = "publicacion";
+
         publicacion.innerHTML = `
             <div class="publicacion-header">
                 <h3>${sanitizarHTML(item.titulo)}</h3>
             </div>
-            <p class="fecha-publicacion">${item.fecha}</p>
+
             <p>${sanitizarHTML(item.descripcion)}</p>
-            ${item.archivo ? `<p><a href="${sanitizarHTML(item.archivo)}" target="_blank" style="color: #2d6a4f; font-weight: bold;">📎 Ver contenido</a></p>` : ''}
+
+            ${item.url_archivo ? `
+                <p>
+                    <a href="${item.url_archivo}" target="_blank">
+                        📎 Ver archivo
+                    </a>
+                </p>
+            ` : ""}
         `;
-        
+
         contenedor.appendChild(publicacion);
+
     });
+
 }
 
 // Cargar publicaciones al entrar a página inicio
@@ -386,6 +430,10 @@ if(window.location.pathname.includes('index.html') || window.location.pathname.e
 if(window.location.pathname.includes('arte.html')) {
     document.addEventListener('DOMContentLoaded', () => cargarPublicacionesSeccion('arte'));
 }
+// Cargar publicaciones de literatura
+if(window.location.pathname.includes('literatura.html')) {
+    document.addEventListener('DOMContentLoaded', () => cargarPublicacionesSeccion('literatura'));
+}
 
 // Cargar publicaciones de convivencia
 if(window.location.pathname.includes('convivencia.html')) {
@@ -396,3 +444,6 @@ if(window.location.pathname.includes('convivencia.html')) {
 if(window.location.pathname.includes('eventos.html')) {
     document.addEventListener('DOMContentLoaded', () => cargarPublicacionesSeccion('eventos'));
 }
+
+// ===== PRUEBA =====
+// obtenerPublicaciones();

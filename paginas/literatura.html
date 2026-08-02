@@ -76,6 +76,8 @@
     </header>
 
     <!-- HERO -->
+    
+
 
     <section class="hero">
 
@@ -95,6 +97,20 @@
                 creatividad y expresión mediante cuentos,
                 poemas y escritos literarios.
 
+            </p>
+
+        </div>
+
+    </section>
+     <!-- PUBLICACIONES DE LITERATURA -->
+    <section class="publicaciones-seccion">
+
+        <h2>📚 Publicaciones de Literatura</h2>
+
+        <div class="contenedor-publicaciones">
+
+            <p class="sin-publicaciones">
+                Cargando publicaciones...
             </p>
 
         </div>
@@ -322,8 +338,14 @@
 
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase.js"></script>
     <script src="../js/app.js"></script>
 
+    <script>
+    console.log("LITERATURA CARGADA");
+    console.log(window.location.pathname);
+</script>
 </body>
 
 </html>
