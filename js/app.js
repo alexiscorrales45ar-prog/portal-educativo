@@ -5,9 +5,6 @@ console.log("APP.JS VERSION NUEVA");
 const DB = {
     // Inicializar base de datos local
     init: function() {
-        if (!localStorage.getItem('colegio_comentarios')) {
-            localStorage.setItem('colegio_comentarios', JSON.stringify({}));
-        }
         if (!localStorage.getItem('colegio_contenido')) {
             localStorage.setItem('colegio_contenido', JSON.stringify({
                 arte: [],
@@ -16,9 +13,6 @@ const DB = {
                 eventos: [],
                 inicio: []
             }));
-        }
-        if (!localStorage.getItem('colegio_publicaciones_inicio')) {
-            localStorage.setItem('colegio_publicaciones_inicio', JSON.stringify([]));
         }
         if (!localStorage.getItem('usuario_actual')) {
             localStorage.setItem('usuario_actual', JSON.stringify({ tipo: 'estudiante', nombre: '' }));
@@ -46,70 +40,168 @@ const DB = {
 
         return true;
     },
-    
-    obtenerPublicacionesInicio: function() {
-        let publicaciones = JSON.parse(localStorage.getItem('colegio_publicaciones_inicio')) || [];
-        return publicaciones.reverse();
+
+    obtenerPublicacionInicio: async function(id) {
+        const { data, error } = await supabaseClient
+            .from("publicaciones")
+            .select("*")
+            .eq("id", id)
+            .single();
+
+        if (error) {
+            console.error("❌ Error al obtener publicación:", error);
+            return null;
+        }
+
+        return data;
     },
+
+    actualizarPublicacionInicio: async function(id, titulo, contenido) {
+        const { error } = await supabaseClient
+            .from("publicaciones")
+            .update({
+                titulo: titulo,
+                descripcion: contenido
+            })
+            .eq("id", id);
+
+        if (error) {
+            console.error("❌ Error al actualizar publicación:", error);
+            return false;
+        }
+
+        return true;
+    },
+
+   obtenerPublicacionesInicio: async function() {
+
+    console.log("🔎 Buscando publicaciones de inicio...");
+
+    const { data, error } = await supabaseClient
+        .from("publicaciones")
+        .select("*")
+        .eq("seccion", "inicio")
+        .order("id", { ascending: false });
+
+    console.log("📦 Datos inicio:", data);
+    console.log("❌ Error inicio:", error);
+
+    if (error) {
+        console.error("❌ Error al obtener publicaciones de inicio:", error);
+        return [];
+    }
+
+    return data || [];
+},
     
-    eliminarPublicacionInicio: function(id) {
-        let publicaciones = JSON.parse(localStorage.getItem('colegio_publicaciones_inicio')) || [];
-        publicaciones = publicaciones.filter(p => p.id !== id);
-        localStorage.setItem('colegio_publicaciones_inicio', JSON.stringify(publicaciones));
+    eliminarPublicacionInicio: async function(id) {
+
+        const { error } = await supabaseClient
+            .from("publicaciones")
+            .delete()
+            .eq("id", id);
+
+        if (error) {
+            console.error("❌ Error al eliminar publicación:", error);
+            return false;
+        }
+
+        console.log("✅ Publicación eliminada correctamente");
+
         return true;
     },
     
-    agregarComentario: function(pagina, nombre, mensaje) {
-        let comentarios = JSON.parse(localStorage.getItem('colegio_comentarios')) || {};
-        if (!comentarios[pagina]) comentarios[pagina] = [];
-        
-        comentarios[pagina].push({
-            id: Date.now(),
-            nombre: nombre,
-            mensaje: mensaje,
-            fecha: new Date().toLocaleDateString('es-ES'),
-            aprobado: false,
-            tipo: 'estudiante'
-        });
-        
-        localStorage.setItem('colegio_comentarios', JSON.stringify(comentarios));
-        return comentarios[pagina];
-    },
-    
-    obtenerComentarios: function(pagina, soloAprobados = true) {
-        let comentarios = JSON.parse(localStorage.getItem('colegio_comentarios')) || {};
-        let items = comentarios[pagina] || [];
-        
-        if(soloAprobados) {
-            return items.filter(c => c.aprobado === true);
+    agregarComentario: async function(publicacionId, nombre, mensaje) {
+        const { data, error } = await supabaseClient
+            .from('comentarios')
+            .insert([
+                {
+                    publicacion_id: publicacionId,
+                    nombre: nombre,
+                    mensaje: mensaje,
+                    aprobado: false,
+                    fecha: new Date().toISOString()
+                }
+            ])
+            .select();
+
+        if (error) {
+            console.error('❌ Error al guardar comentario:', error);
+            return false;
         }
-        return items;
+
+        console.log('✅ Comentario guardado en Supabase:', data);
+
+        return true;
     },
     
-    obtenerTodosComentarios: function() {
-        let comentarios = JSON.parse(localStorage.getItem('colegio_comentarios')) || {};
-        return comentarios;
-    },
-    
-    aprobarComentario: function(pagina, id) {
-        let comentarios = JSON.parse(localStorage.getItem('colegio_comentarios')) || {};
-        if(!comentarios[pagina]) return false;
-        
-        let comentario = comentarios[pagina].find(c => c.id === id);
-        if(comentario) {
-            comentario.aprobado = true;
-            localStorage.setItem('colegio_comentarios', JSON.stringify(comentarios));
-            return true;
+    obtenerComentarios: async function(publicacionId, soloAprobados = true) {
+        let query = supabaseClient
+            .from('comentarios')
+            .select('*')
+            .eq('publicacion_id', publicacionId)
+            .order('created_at', { ascending: false });
+
+        if (soloAprobados) {
+            query = query.eq('aprobado', true);
         }
-        return false;
+
+        const { data, error } = await query;
+        if (error) {
+            console.error('❌ Error al obtener comentarios:', error);
+            return [];
+        }
+
+        return (data || []).map(item => ({
+            ...item,
+            fecha: item.fecha || item.created_at || null,
+            mensaje: item.mensaje || item.comentario || ''
+        }));
     },
     
-    rechazarComentario: function(pagina, id) {
-        let comentarios = JSON.parse(localStorage.getItem('colegio_comentarios')) || {};
-        if(!comentarios[pagina]) return false;
-        
-        comentarios[pagina] = comentarios[pagina].filter(c => c.id !== id);
-        localStorage.setItem('colegio_comentarios', JSON.stringify(comentarios));
+    obtenerTodosComentarios: async function() {
+        const { data, error } = await supabaseClient
+            .from('comentarios')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('❌ Error al obtener todos los comentarios:', error);
+            return [];
+        }
+
+        return (data || []).map(item => ({
+            ...item,
+            fecha: item.fecha || item.created_at || null,
+            mensaje: item.mensaje || item.comentario || ''
+        }));
+    },
+    
+    aprobarComentario: async function(id) {
+        const { error } = await supabaseClient
+            .from('comentarios')
+            .update({ aprobado: true })
+            .eq('id', id);
+
+        if (error) {
+            console.error('❌ Error al aprobar comentario:', error);
+            return false;
+        }
+
+        return true;
+    },
+    
+    rechazarComentario: async function(id) {
+        const { error } = await supabaseClient
+            .from('comentarios')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('❌ Error al eliminar comentario:', error);
+            return false;
+        }
+
         return true;
     },
     
@@ -177,82 +269,172 @@ document.addEventListener('DOMContentLoaded', function() {
 // COMENTARIOS
 // =========================
 
-function agregarComentario(){
-    let nombre = document.getElementById("nombre").value.trim();
-    let mensaje = document.getElementById("mensaje").value.trim();
-    
-    if(nombre === "") {
+async function agregarComentario(publicacionId) {
+    let nombreField = document.getElementById(`nombre-${publicacionId}`);
+    let mensajeField = document.getElementById(`mensaje-${publicacionId}`);
+
+    if (!nombreField || !mensajeField) return;
+
+    let nombre = nombreField.value.trim();
+    let mensaje = mensajeField.value.trim();
+
+    if (nombre === "") {
         mostrarError("Por favor ingresa tu nombre");
         return;
     }
-    
-    if(nombre.length < 3) {
+
+    if (nombre.length < 3) {
         mostrarError("El nombre debe tener al menos 3 caracteres");
         return;
     }
-    
-    if(mensaje === "") {
+
+    if (mensaje === "") {
         mostrarError("Por favor escribe un comentario");
         return;
     }
-    
-    if(mensaje.length > 500) {
+
+    if (mensaje.length > 500) {
         mostrarError("El comentario no puede exceder 500 caracteres");
         return;
     }
-    
-    // Detectar página actual
-    let pagina = window.location.pathname.split('/').pop() || 'index.html';
-    
-    // Agregar a base de datos
-    let comentarios = DB.agregarComentario(pagina, nombre, mensaje);
-    
-    // Limpiar formulario
-    document.getElementById("nombre").value = "";
-    document.getElementById("mensaje").value = "";
-    
-    // Recargar comentarios
-    cargarComentarios();
-    
+
+    const enviado = await DB.agregarComentario(publicacionId, nombre, mensaje);
+    if (!enviado) {
+        mostrarError("No fue posible enviar el comentario.");
+        return;
+    }
+
+    nombreField.value = "";
+    mensajeField.value = "";
+
+    await cargarComentariosPublicacion(publicacionId);
     mostrarExito("✅ Comentario enviado - Pendiente de aprobación del docente");
 }
 
-function cargarComentarios(){
-    let pagina = window.location.pathname.split('/').pop() || 'index.html';
-    let comentarios = DB.obtenerComentarios(pagina, true); // Solo aprobados para estudiantes
-    let contenedor = document.querySelector(".contenedor-comentarios");
-    
-    if(!contenedor) return;
-    
-    // Limpiar comentarios antiguos (excepto los predefinidos)
-    let comentariosUI = contenedor.querySelectorAll('.comentario[data-id]');
-    comentariosUI.forEach(c => c.remove());
-    
-    // Determinar ruta de imagen según la página
-    let rutaImagen = 'img/estudiantes.JPG';
-    if(pagina.includes('.html') && pagina !== 'index.html') {
-        rutaImagen = '../img/estudiantes.JPG';
+async function cargarComentariosPublicacion(publicacionId) {
+    let contenedor = document.getElementById(`comentarios-lista-${publicacionId}`);
+    if (!contenedor) return;
+
+    contenedor.innerHTML = "<p class='sin-comentarios'>Cargando comentarios...</p>";
+    const comentarios = await DB.obtenerComentarios(publicacionId, true);
+
+    if (!comentarios || comentarios.length === 0) {
+        contenedor.innerHTML = '<p class="sin-comentarios">No hay comentarios aprobados aún.</p>';
+        return;
     }
-    
-    // Agregar comentarios de la BD (en orden inverso)
-    comentarios.reverse().forEach(c => {
-        let nuevoComentario = document.createElement("div");
-        nuevoComentario.classList.add("comentario");
-        nuevoComentario.setAttribute("data-id", c.id);
-        
-        nuevoComentario.innerHTML = `
-            <img src="${rutaImagen}" alt="Avatar de estudiante">
+
+    contenedor.innerHTML = "";
+
+    comentarios.forEach(c => {
+        let comentario = document.createElement("div");
+        comentario.className = "comentario";
+        comentario.innerHTML = `
+            <img src="${getRutaImagenComentario()}" alt="Avatar de estudiante">
             <div class="texto-comentario">
                 <div class="encabezado-comentario">
                     <h3>${sanitizarHTML(c.nombre)}</h3>
-                    <span>${c.fecha}</span>
+                    <span>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-ES') : ''}</span>
                 </div>
                 <p>${sanitizarHTML(c.mensaje)}</p>
             </div>
         `;
-        
-        contenedor.appendChild(nuevoComentario);
+        contenedor.appendChild(comentario);
     });
+}
+
+function getRutaImagenComentario() {
+    let pagina = window.location.pathname.split('/').pop() || 'index.html';
+    if (pagina.includes('.html') && pagina !== 'index.html') {
+        return '../img/estudiantes.JPG';
+    }
+    return 'img/estudiantes.JPG';
+}
+
+function crearFormularioComentario(publicacionId) {
+    // Mostrar un botón compacto que abre un modal para comentar (evita panels grandes)
+    return `
+        <div class="formulario-comentario-boton">
+            <button type="button" class="btn-comentar" onclick="abrirModalComentario(${publicacionId})">💬 Comentar</button>
+        </div>
+    `;
+}
+
+// Abre un modal ligero para dejar un comentario sin afectar el diseño de la publicación
+function abrirModalComentario(publicacionId) {
+    // Si ya existe, mostrarlo
+    let existing = document.getElementById(`modal-comentario-${publicacionId}`);
+    if (existing) {
+        existing.style.display = 'flex';
+        return;
+    }
+
+    let modal = document.createElement('div');
+    modal.id = `modal-comentario-${publicacionId}`;
+    modal.className = 'modal-comentario';
+    modal.style = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);z-index:9999;";
+    modal.innerHTML = `
+        <div style="background:#fff;padding:18px;border-radius:8px;max-width:520px;width:92%;box-shadow:0 6px 20px rgba(0,0,0,0.12);">
+            <h3 style="margin-top:0;">Deja tu comentario</h3>
+            <p class="info-aprobacion">ℹ️ Tu comentario será revisado por un docente antes de publicarse</p>
+            <input type="text" id="modal-nombre-${publicacionId}" placeholder="Tu nombre" style="width:100%;padding:8px;margin:8px 0;border:1px solid #ddd;border-radius:6px;">
+            <textarea id="modal-mensaje-${publicacionId}" placeholder="Escribe tu comentario" style="width:100%;height:110px;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;"></textarea>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button onclick="document.getElementById('modal-comentario-${publicacionId}').style.display='none'" class="btn-secundario">Cerrar</button>
+                <button onclick="agregarComentarioModal(${publicacionId})" class="btn-primario">Enviar Comentario</button>
+            </div>
+        </div>
+    `;
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+
+    document.body.appendChild(modal);
+}
+
+async function agregarComentarioModal(publicacionId) {
+    let nombreField = document.getElementById(`modal-nombre-${publicacionId}`);
+    let mensajeField = document.getElementById(`modal-mensaje-${publicacionId}`);
+
+    if (!nombreField || !mensajeField) return;
+
+    let nombre = nombreField.value.trim();
+    let mensaje = mensajeField.value.trim();
+
+    if (nombre === "") {
+        mostrarError("Por favor ingresa tu nombre");
+        return;
+    }
+
+    if (nombre.length < 3) {
+        mostrarError("El nombre debe tener al menos 3 caracteres");
+        return;
+    }
+
+    if (mensaje === "") {
+        mostrarError("Por favor escribe un comentario");
+        return;
+    }
+
+    if (mensaje.length > 500) {
+        mostrarError("El comentario no puede exceder 500 caracteres");
+        return;
+    }
+
+    const enviado = await DB.agregarComentario(publicacionId, nombre, mensaje);
+    if (!enviado) {
+        mostrarError("No fue posible enviar el comentario.");
+        return;
+    }
+
+    nombreField.value = "";
+    mensajeField.value = "";
+
+    let modal = document.getElementById(`modal-comentario-${publicacionId}`);
+    if (modal) modal.style.display = 'none';
+
+    await cargarComentariosPublicacion(publicacionId);
+    mostrarExito("✅ Comentario enviado - Pendiente de aprobación del docente");
 }
 
 // =========================
@@ -265,7 +447,7 @@ function mostrarError(mensaje) {
     modal.style.display = 'flex';
     
     setTimeout(() => {
-        modal.style.display = 'none';
+        modal.style.display = 'none'; 
     }, 4000);
 }
 
@@ -298,17 +480,13 @@ function sanitizarHTML(texto) {
     return div.innerHTML;
 }
 
-// Cargar comentarios al entrar a página
-document.addEventListener('DOMContentLoaded', cargarComentarios);
-
-
 // =========================
 // PUBLICACIONES DEL INICIO
 // =========================
 
 async function cargarPublicacionesInicio() {
 
-    let contenedor = document.querySelector(".contenedor-publicaciones");
+    let contenedor = document.querySelector(".publicaciones-inicio .contenedor-publicaciones");
 
     if (!contenedor) return;
 
@@ -328,13 +506,12 @@ async function cargarPublicacionesInicio() {
 
     contenedor.innerHTML = "";
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
         contenedor.innerHTML = "<p class='sin-publicaciones'>No hay publicaciones.</p>";
         return;
     }
 
-    data.forEach(item => {
-
+    for (const item of data) {
         let publicacion = document.createElement("div");
         publicacion.className = "publicacion";
 
@@ -352,16 +529,21 @@ async function cargarPublicacionesInicio() {
                     </a>
                 </p>
             ` : ""}
+
+            <div id="comentarios-lista-${item.id}" class="contenedor-comentarios">
+                <p class="sin-comentarios">Cargando comentarios...</p>
+            </div>
+
+            ${crearFormularioComentario(item.id)}
         `;
 
         contenedor.appendChild(publicacion);
-
-    });
-
+        await cargarComentariosPublicacion(item.id);
+    }
 }
 
 // =========================
-// PUBLICACIONES DE SECCIONES (Arte, Convivencia, Eventos)
+// PUBLICACIONES DE SECCIONES (Arte, Convivencia, Eventos, Literatura)
 // =========================
 
 async function cargarPublicacionesSeccion(seccion) {
@@ -379,7 +561,9 @@ async function cargarPublicacionesSeccion(seccion) {
         .order("id", { ascending: false });
 
     console.log("Sección solicitada:", seccion);
-    console.log("Datos recibidos:", data);    
+    console.log("Datos recibidos:", data);
+    console.log("📌 Contenedor encontrado:", contenedor);
+    console.log("📌 Cantidad de publicaciones:", data ? data.length : 0);
 
     if (error) {
         console.error("❌ Error al cargar publicaciones:", error);
@@ -389,13 +573,13 @@ async function cargarPublicacionesSeccion(seccion) {
 
     contenedor.innerHTML = "";
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
         contenedor.innerHTML = "<p class='sin-publicaciones'>No hay publicaciones.</p>";
         return;
     }
 
-    data.forEach(item => {
-
+    for (const item of data) {
+        console.log("📌 Publicación que se va a mostrar:", item);
         let publicacion = document.createElement("div");
         publicacion.className = "publicacion";
 
@@ -413,12 +597,18 @@ async function cargarPublicacionesSeccion(seccion) {
                     </a>
                 </p>
             ` : ""}
+
+            <div id="comentarios-lista-${item.id}" class="contenedor-comentarios">
+                <p class="sin-comentarios">Cargando comentarios...</p>
+            </div>
+
+            ${crearFormularioComentario(item.id)}
         `;
 
         contenedor.appendChild(publicacion);
-
-    });
-
+        console.log("✅ Publicación agregada al HTML");
+        await cargarComentariosPublicacion(item.id);
+    }
 }
 
 // Cargar publicaciones al entrar a página inicio
@@ -443,6 +633,18 @@ if(window.location.pathname.includes('convivencia.html')) {
 // Cargar publicaciones de eventos
 if(window.location.pathname.includes('eventos.html')) {
     document.addEventListener('DOMContentLoaded', () => cargarPublicacionesSeccion('eventos'));
+
+}
+
+
+// Cargar publicaciones de convivencia
+if(window.location.pathname.includes('convivencia.html')) {
+    console.log("🟢 Detectó convivencia.html");
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("🟢 Ejecutando cargarPublicacionesSeccion('convivencia')");
+        cargarPublicacionesSeccion('convivencia');
+    });
 }
 
 // ===== PRUEBA =====

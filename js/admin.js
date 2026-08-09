@@ -2,34 +2,70 @@
 // PANEL ADMINISTRATIVO - SISTEMA DE ROLES
 // =========================
 
+const ADMIN_EMAILS = [
+    'jahteseguire@hotmail.com' // Reemplaza con el correo del administrador principal
+];
+
 let seccionActual = 'arte';
 let panelActual = 'contenido'; // 'contenido', 'publicaciones', 'comentarios'
 let usuarioActual = null;
+let publicacionEditId = null;
 
 // Inicializar panel
 document.addEventListener('DOMContentLoaded', function() {
-    usuarioActual = JSON.parse(localStorage.getItem('usuario_actual'));
     verificarAutenticacion();
-    if(usuarioActual && (usuarioActual.tipo === 'docente' || usuarioActual.tipo === 'admin')) {
-        cargarEstadisticas();
-        if(usuarioActual.tipo === 'docente') {
-            mostrarSeccion('arte');
-        }
-    }
 });
 
-function verificarAutenticacion() {
-    if(!usuarioActual || (usuarioActual.tipo !== 'docente' && usuarioActual.tipo !== 'admin')) {
+async function verificarAutenticacion() {
+
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) {
+        console.error('❌ Error al verificar sesión:', error);
         mostrarLogin();
+        return;
+    }
+
+    const session = data.session;
+
+    // No existe sesión real en Supabase
+    if (!session || !session.user) {
+        mostrarLogin();
+        return;
+    }
+
+    const usuario = session.user;
+
+    console.log('👤 Usuario completo:', usuario);
+    console.log('🔐 Metadata del usuario:', usuario.user_metadata);
+
+    console.log('✅ Sesión válida de Supabase:', usuario.email);
+
+    const nombre =
+        usuario.user_metadata?.nombre ||
+        usuario.email;
+
+    const tipo =
+        usuario.user_metadata?.tipo ||
+        (ADMIN_EMAILS.includes(usuario.email) ? 'admin' : 'docente');
+
+    usuarioActual = {
+        nombre,
+        email: usuario.email,
+        tipo,
+        fecha_login: new Date().toISOString()
+    };
+
+    const elementoNombre = document.getElementById('nombre-docente');
+
+    if (elementoNombre) {
+        elementoNombre.textContent = nombre;
+    }
+
+    if (tipo === 'admin') {
+        mostrarPanelAdmin();
     } else {
-        document.getElementById('nombre-docente').textContent = usuarioActual.nombre;
-        
-        // Mostrar panel de admin si es admin
-        if(usuarioActual.tipo === 'admin') {
-            mostrarPanelAdmin();
-        } else if(usuarioActual.tipo === 'docente') {
-            mostrarPanelDocente();
-        }
+        mostrarPanelDocente();
     }
 }
 
@@ -37,75 +73,75 @@ function mostrarLogin() {
     document.body.innerHTML = `
         <div class="login-container">
             <div class="login-box">
-                <h1>Acceso Administrativo</h1>
-                <p>Panel exclusivo para docentes y administradores</p>
-                
+                <div class="login-header">
+                    <img src="img/escudo.JPG" alt="Escudo institucional" class="login-logo">
+                    <h1>Acceso Administrativo</h1>
+                    <p>Panel exclusivo para docentes y administradores</p>
+                </div>
+
                 <form onsubmit="iniciarSesion(event)" class="form-login">
                     <input type="text" id="usuario-login" placeholder="Usuario o correo" required 
                            aria-label="Usuario o correo electrónico">
                     <input type="password" id="pass-login" placeholder="Contraseña" required 
                            aria-label="Contraseña">
+                    <p class="login-recover">¿Olvidaste tu contraseña?</p>
                     <button type="submit" class="btn-primario">Entrar</button>
                 </form>
-                
-                <p class="hint-login">
-                    <strong>🔐 Credenciales Rector/Admin:</strong><br>
-                    Correo: rector@institucion.edu<br>
-                    Contraseña: Rector2026!
-                    <br><br>
-                    <strong>📌 Demo (Dev):</strong><br>
-                    Usuario: demo | Contraseña: 123456
-                </p>
-                
+
                 <a href="index.html" class="link-volver">← Volver al inicio</a>
             </div>
         </div>
     `;
 }
 
-function iniciarSesion(e) {
+async function iniciarSesion(e) {
     e.preventDefault();
-    
-    let usuario = document.getElementById('usuario-login').value.trim();
-    let password = document.getElementById('pass-login').value;
-    
-    // Docentes registrados (el admin los agrega)
-    let docentesRegistrados = JSON.parse(localStorage.getItem('docentes_registrados')) || {};
-    
-    // Usuarios válidos
-    const usuariosValidos = {
-        'rector@institucion.edu': { password: 'Rector2026!', tipo: 'admin', nombre: 'Rector - Administrador' },
-        'demo': { password: '123456', tipo: 'demo', nombre: 'Demo Desarrollador' }
-    };
-    
-    // Verificar en usuarios predefinidos
-    if(usuariosValidos[usuario] && usuariosValidos[usuario].password === password) {
-        let datos = usuariosValidos[usuario];
-        localStorage.setItem('usuario_actual', JSON.stringify({
-            tipo: datos.tipo,
-            nombre: datos.nombre,
-            usuario: usuario,
-            fecha_login: new Date().toISOString()
-        }));
-        window.location.reload();
-        return;
-    }
-    
-    // Verificar en docentes registrados
-    if(docentesRegistrados[usuario] && docentesRegistrados[usuario].password === password) {
-        localStorage.setItem('usuario_actual', JSON.stringify({
-            tipo: 'docente',
-            nombre: docentesRegistrados[usuario].nombre,
-            email: usuario,
-            fecha_login: new Date().toISOString()
-        }));
-        window.location.reload();
-        return;
-    }
-    
-    alert('Usuario o contraseña incorrectos');
-}
 
+    const usuario = document.getElementById('usuario-login').value.trim();
+    const password = document.getElementById('pass-login').value;
+
+    if (!usuario || !password) {
+        alert('Ingresa tu correo y contraseña.');
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: usuario,
+            password: password
+        });
+
+        if (error) {
+            console.error('❌ Error al iniciar sesión:', error);
+            alert('Correo o contraseña incorrectos.');
+            return;
+        }
+
+        if (!data.user) {
+            alert('No se pudo iniciar la sesión.');
+            return;
+        }
+
+        console.log('✅ Sesión iniciada:', data.user.email);
+
+        const tipoUsuario =
+            data.user.user_metadata?.tipo ||
+            (ADMIN_EMAILS.includes(data.user.email) ? 'admin' : 'docente');
+
+        usuarioActual = {
+            nombre: data.user.user_metadata?.nombre || data.user.email,
+            email: data.user.email,
+            tipo: tipoUsuario,
+            fecha_login: new Date().toISOString()
+        };
+
+        window.location.reload();
+
+    } catch (error) {
+        console.error('❌ Error inesperado al iniciar sesión:', error);
+        alert('Ocurrió un error al intentar iniciar sesión.');
+    }
+}
 function mostrarPanelAdmin() {
     // Cambiar contenido del panel para admin
     let header = document.querySelector('.admin-header p');
@@ -129,18 +165,46 @@ function mostrarPanelAdmin() {
 }
 
 function mostrarPanelDocente() {
-    // Asegurar que los botones de navegación existan
-    let nav = document.querySelector('.panel-navegacion');
-    if(!nav) {
+    const nav = document.querySelector('.panel-navegacion');
+
+    // Asegurar que el botón de gestión de docentes no esté visible para docentes.
+    const btnAdmin = document.querySelector('[data-panel="docentes"]');
+    if (btnAdmin) {
+        btnAdmin.style.display = 'none';
+    }
+
+    // Asegurar que docentes vean las secciones de publicaciones y comentarios.
+    ['publicaciones', 'comentarios', 'contenido'].forEach(panel => {
+        const btn = document.querySelector(`[data-panel="${panel}"]`);
+        if (btn) {
+            btn.style.display = 'inline-flex';
+        }
+    });
+
+    if (!nav) {
         console.log('Navegación de panel no encontrada');
     }
 }
 
-function cerrarSesion() {
-    if(confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-        localStorage.setItem('usuario_actual', JSON.stringify({ tipo: 'estudiante', nombre: '' }));
-        window.location.href = 'index.html';
+async function cerrarSesion() {
+
+    if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+        return;
     }
+
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+        console.error('❌ Error al cerrar sesión:', error);
+        alert('No se pudo cerrar la sesión.');
+        return;
+    }
+
+    console.log('✅ Sesión cerrada correctamente');
+
+    usuarioActual = null;
+
+    window.location.href = 'index.html';
 }
 
 // =========================
@@ -178,13 +242,35 @@ function cambiarPanel(panel) {
 // GESTIÓN DE CONTENIDO
 // =========================
 
-function guardarContenido(e) {
+async function guardarContenido(e) {
     e.preventDefault();
     
     let seccion = document.getElementById('seccion').value;
     let titulo = document.getElementById('titulo').value.trim();
     let descripcion = document.getElementById('descripcion').value.trim();
     let archivo = document.getElementById('archivo').value.trim();
+    let archivoFinal = archivo;
+    // Si hay un archivo seleccionado, subirlo a Supabase Storage y usar su URL pública
+    try {
+        let fileInput = document.getElementById('archivo-file');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+            const path = `publicaciones/${Date.now()}_${safeName}`;
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('public').upload(path, file);
+            if (uploadError) {
+                console.error('Error subiendo imagen:', uploadError);
+                mostrarError('No fue posible subir la imagen. Intenta nuevamente.');
+                return;
+            }
+            const { data: publicData } = await supabaseClient.storage.from('public').getPublicUrl(path);
+            archivoFinal = (publicData && publicData.publicUrl) ? publicData.publicUrl : archivoFinal;
+        }
+    } catch (err) {
+        console.error('Error al procesar la imagen:', err);
+        mostrarError('Error al procesar la imagen.');
+        return;
+    }
     
     if(!seccion) {
         mostrarError('Debes seleccionar una sección');
@@ -201,15 +287,18 @@ function guardarContenido(e) {
         return;
     }
     
-    // Agregar contenido
-    DB.agregarContenido(seccion, titulo, descripcion, archivo);
+    const guardado = await DB.agregarContenido(seccion, titulo, descripcion, archivoFinal);
+    if (!guardado) {
+        mostrarError('No fue posible guardar el contenido. Verifica la conexión con Supabase.');
+        return;
+    }
     
     // Limpiar formulario
     document.querySelector('.form-contenido').reset();
     
     // Actualizar vista
-    mostrarSeccion(seccion);
-    cargarEstadisticas();
+    await mostrarSeccion(seccion);
+    await cargarEstadisticas();
     
     mostrarExito('Contenido cargado correctamente');
 }
@@ -219,25 +308,18 @@ async function mostrarSeccion(seccion) {
     seccionActual = seccion;
 
     // Actualizar botones
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('activo');
-    });
-
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('activo'));
     document.querySelector(`[data-seccion="${seccion}"]`).classList.add('activo');
 
-    let lista = document.getElementById('contenido-lista');
-
-    lista.innerHTML = "<p>Cargando...</p>";
+    const lista = document.getElementById('contenido-lista');
+    if (!lista) return;
+    lista.innerHTML = "<p class='sin-contenido'>Cargando...</p>";
 
     const { data, error } = await supabaseClient
-    .from("publicaciones")
-    .select("*")
-    .eq("seccion", seccion)
-    .order("id", { ascending: false });
-
-    console.log("Sección:", seccion);
-    console.log("Datos:", data);
-    console.log("Error:", error);
+        .from("publicaciones")
+        .select("*")
+        .eq("seccion", seccion)
+        .order("id", { ascending: false });
 
     if (error) {
         console.error(error);
@@ -245,39 +327,193 @@ async function mostrarSeccion(seccion) {
         return;
     }
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
         lista.innerHTML = '<p class="sin-contenido">No hay contenido cargado en esta sección.</p>';
         return;
     }
 
-    lista.innerHTML = "";
+    // Cache minimal fields for client-side operations
+    window._publicacionesCache = data.map(item => ({
+        id: item.id,
+        titulo: item.titulo || '',
+        descripcion: item.descripcion || '',
+        seccion: item.seccion || '',
+        url_archivo: item.url_archivo || item.url || item.archivo || null,
+        fecha: item.fecha || item.created_at || null
+    }));
 
-    data.forEach(item => {
+    // Render controls and container
+    lista.innerHTML = `
+        <div class="lista-controls">
+            <input type="search" id="buscar-publicacion" class="buscar-publicacion" placeholder="🔎 Buscar publicación..." aria-label="Buscar publicación">
+            <div id="estadisticas-seccion" class="stats-small"></div>
+        </div>
+        <div id="lista-rows" class="lista-rows"></div>
+        <div id="contenido-paginacion" class="contenido-paginacion"></div>
+    `;
 
-        let card = document.createElement("div");
+    const searchInput = document.getElementById('buscar-publicacion');
+    const rowsContainer = document.getElementById('lista-rows');
+    const pagContainer = document.getElementById('contenido-paginacion');
+    const statsElem = document.getElementById('estadisticas-seccion');
 
-        card.className = "contenido-card";
+    const publicaciones = window._publicacionesCache.slice();
+    let filteredList = publicaciones;
+    let currentPage = 1;
+    const pageSize = 20;
 
-        card.innerHTML = `
-            <div class="contenido-header">
-                <h4>${sanitizarHTML(item.titulo)}</h4>
-            </div>
+    function formatDate(fecha) {
+        if (!fecha) return '';
+        const d = new Date(fecha);
+        if (isNaN(d)) return '';
+        return d.toLocaleDateString('es-ES');
+    }
 
-            <p>${sanitizarHTML(item.descripcion)}</p>
+    function renderRows(list, page = 1) {
+        rowsContainer.innerHTML = '';
 
-            ${item.url_archivo ?
-            `<a href="${item.url_archivo}" target="_blank" class="btn-secundario">
-                📎 Ver recurso
-            </a>` : ""}
+        const start = (page - 1) * pageSize;
+        const pageItems = list.slice(start, start + pageSize);
 
-            <button onclick="eliminarContenido('${seccion}', ${item.id})" class="btn-eliminar">
-                🗑️ Eliminar
-            </button>
+        // Header (desktop)
+        const header = document.createElement('div');
+        header.className = 'lista-row header';
+        header.innerHTML = `
+            <div class="col id-col">ID</div>
+            <div class="col title-col">Publicación</div>
+            <div class="col section-col">Sección</div>
+            <div class="col date-col">Fecha</div>
+            <div class="col resource-col">Recurso</div>
+            <div class="col actions-col">Acciones</div>
         `;
+        rowsContainer.appendChild(header);
 
-        lista.appendChild(card);
+        pageItems.forEach(it => {
+            const row = document.createElement('div');
+            row.className = 'lista-row';
+            row.innerHTML = `
+                <div class="col id-col">${sanitizarHTML(String(it.id))}</div>
+                <div class="col title-col">${sanitizarHTML(it.titulo)}</div>
+                <div class="col section-col">${sanitizarHTML(it.seccion)}</div>
+                <div class="col date-col">${formatDate(it.fecha)}</div>
+                <div class="col resource-col">${it.url_archivo ? '📎' : ''}</div>
+                <div class="col actions-col">
+                    <button type="button" class="btn-ver" data-id="${it.id}">👁️</button>
+                    <button type="button" class="btn-eliminar-list" data-id="${it.id}">🗑️</button>
+                </div>
+            `;
+            rowsContainer.appendChild(row);
+        });
 
+        // Attach events
+        rowsContainer.querySelectorAll('.btn-ver').forEach(b => b.addEventListener('click', (e) => {
+            const id = parseInt(e.currentTarget.dataset.id, 10);
+            abrirModalPublicacion(id);
+        }));
+
+        rowsContainer.querySelectorAll('.btn-eliminar-list').forEach(b => b.addEventListener('click', async (e) => {
+            const id = parseInt(e.currentTarget.dataset.id, 10);
+            if (!confirm('¿Eliminar este contenido?')) return;
+            await eliminarContenido(seccion, id);
+            // refresh data after deletion
+            await mostrarSeccion(seccion);
+        }));
+
+        statsElem.textContent = `${list.length} publicaciones en esta sección`;
+
+        renderPagination(list.length);
+    }
+
+    function renderPagination(total) {
+        pagContainer.innerHTML = '';
+        if (total <= pageSize) return;
+        const totalPages = Math.ceil(total / pageSize);
+
+        const info = document.createElement('div');
+        info.className = 'pagin-info';
+        const startItem = Math.min((currentPage - 1) * pageSize + 1, total);
+        const endItem = Math.min(currentPage * pageSize, total);
+        info.textContent = `Mostrando ${startItem}–${endItem} de ${total} publicaciones`;
+        pagContainer.appendChild(info);
+
+        const controls = document.createElement('div');
+        controls.className = 'pagin-controls';
+
+        const prev = document.createElement('button');
+        prev.textContent = 'Anterior';
+        prev.disabled = currentPage <= 1;
+        prev.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderRows(filteredList, currentPage); } });
+        controls.appendChild(prev);
+
+        // show up to 7 page buttons
+        const maxButtons = 7;
+        let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+        if (endPage - startPage + 1 < maxButtons) {
+            startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+
+        for (let p = startPage; p <= endPage; p++) {
+            const btn = document.createElement('button');
+            btn.textContent = String(p);
+            if (p === currentPage) btn.className = 'active';
+            btn.addEventListener('click', () => { currentPage = p; renderRows(filteredList, currentPage); });
+            controls.appendChild(btn);
+        }
+
+        const next = document.createElement('button');
+        next.textContent = 'Siguiente';
+        next.disabled = currentPage >= totalPages;
+        next.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; renderRows(filteredList, currentPage); } });
+        controls.appendChild(next);
+
+        pagContainer.appendChild(controls);
+    }
+
+    // Search filtering (client-side)
+    searchInput.addEventListener('input', function () {
+        const q = (this.value || '').trim().toLowerCase();
+        currentPage = 1;
+        if (!q) filteredList = publicaciones.slice();
+        else filteredList = publicaciones.filter(it => (it.titulo && it.titulo.toLowerCase().includes(q)) || (it.descripcion && it.descripcion.toLowerCase().includes(q)));
+        renderRows(filteredList, currentPage);
     });
+
+    // Initial render
+    renderRows(filteredList, currentPage);
+
+    // Modal de detalles
+    window.abrirModalPublicacion = function (id) {
+        const item = (window._publicacionesCache || []).find(x => x.id === id);
+        if (!item) return;
+        let existing = document.getElementById(`modal-publicacion-${id}`);
+        if (existing) { existing.style.display = 'flex'; return; }
+        const modal = document.createElement('div');
+        modal.id = `modal-publicacion-${id}`;
+        modal.className = 'modal-publicacion';
+        modal.style = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);z-index:9999;";
+        modal.innerHTML = `
+            <div style="background:#fff;padding:20px;border-radius:8px;max-width:760px;width:94%;max-height:90vh;overflow:auto;">
+                <h3>${sanitizarHTML(item.titulo)}</h3>
+                <p><strong>Sección:</strong> ${sanitizarHTML(item.seccion)}</p>
+                <p><strong>Fecha:</strong> ${formatDate(item.fecha)}</p>
+                <div style="margin:12px 0;color:#333;">${sanitizarHTML(item.descripcion)}</div>
+                ${item.url_archivo ? `<p><a href="${item.url_archivo}" target="_blank" class="btn-secundario">📎 Ver Recurso</a></p>` : ''}
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                    <button class="btn-secundario" onclick="document.getElementById('modal-publicacion-${id}').style.display='none'">Cerrar</button>
+                    <button class="btn-secundario" id="modal-delete-${id}">🗑️ Eliminar</button>
+                </div>
+            </div>
+        `;
+        modal.addEventListener('click', function (e) { if (e.target === modal) modal.style.display = 'none'; });
+        document.body.appendChild(modal);
+        document.getElementById(`modal-delete-${id}`).addEventListener('click', async function () {
+            if (!confirm('¿Eliminar este contenido?')) return;
+            await eliminarContenido(seccion, id);
+            modal.style.display = 'none';
+            await mostrarSeccion(seccion);
+        });
+    };
 
 }
 
@@ -328,13 +564,29 @@ async function cargarEstadisticas() {
 
     document.getElementById("stat-secciones").textContent = secciones.length;
 
-    // Por ahora siguen en 0 hasta migrar comentarios
-    document.getElementById("stat-comentarios").textContent = "0";
+    const { count: totalComentarios, error: errorTotal } = await supabaseClient
+        .from('comentarios')
+        .select('*', { count: 'exact', head: true });
+
+    if (errorTotal) {
+        console.error('❌ Error al contar comentarios:', errorTotal);
+    }
+
+    const { count: pendientesComentarios, error: errorPendientes } = await supabaseClient
+        .from('comentarios')
+        .select('*', { count: 'exact', head: true })
+        .eq('aprobado', false);
+
+    if (errorPendientes) {
+        console.error('❌ Error al contar comentarios pendientes:', errorPendientes);
+    }
+
+    document.getElementById("stat-comentarios").textContent = totalComentarios ?? 0;
 
     const pendientes = document.getElementById("stat-pendientes");
 
     if (pendientes) {
-        pendientes.textContent = "0";
+        pendientes.textContent = pendientesComentarios ?? 0;
     }
 
 }
@@ -356,31 +608,82 @@ async function guardarPublicacionInicio(e) {
         return;
     }
 
-    const { error } = await supabaseClient
-        .from("publicaciones")
-        .insert([
-            {
-                seccion: "inicio",
-                titulo: titulo,
-                descripcion: contenido
-            }
-        ]);
-
-    if (error) {
-        console.error("❌ Error al guardar:", error);
-        mostrarError("No fue posible guardar la publicación.");
-        return;
+    if (publicacionEditId) {
+        const actualizado = await DB.actualizarPublicacionInicio(publicacionEditId, titulo, contenido);
+        if (!actualizado) {
+            mostrarError('No fue posible actualizar la publicación.');
+            return;
+        }
+        mostrarExito('✅ Publicación actualizada correctamente');
+        publicacionEditId = null;
+    } else {
+        const guardado = await DB.agregarPublicacionInicio(titulo, contenido);
+        if (!guardado) {
+            mostrarError('No fue posible guardar la publicación. Verifica la conexión con Supabase.');
+            return;
+        }
+        mostrarExito('✅ Publicación agregada correctamente');
     }
 
     // Limpiar formulario
     document.querySelector('.form-publicacion').reset();
+    cancelarEdicionPublicacion();
 
     // Actualizar vista
     await cargarPublicacionesAdmin();
     await cargarEstadisticas();
+}
 
-    mostrarExito("✅ Publicación agregada correctamente");
+async function editarPublicacionInicio(id) {
+    const publicacion = await DB.obtenerPublicacionInicio(id);
+    if (!publicacion) {
+        mostrarError('No se encontró la publicación para editar.');
+        return;
+    }
 
+    document.getElementById('titulo-pub').value = publicacion.titulo || '';
+    document.getElementById('contenido-pub').value = publicacion.descripcion || '';
+    publicacionEditId = id;
+
+    let btnEnviar = document.querySelector('.form-publicacion button[type="submit"]');
+    if (btnEnviar) {
+        btnEnviar.textContent = 'Actualizar Publicación';
+    }
+
+    let tituloForm = document.querySelector('.form-publicacion h3');
+    if (tituloForm) {
+        tituloForm.textContent = '✏️ Editar Publicación';
+    }
+
+    let cancelBtn = document.getElementById('cancelar-edicion-publicacion');
+    if (!cancelBtn) {
+        cancelBtn = document.createElement('button');
+        cancelBtn.id = 'cancelar-edicion-publicacion';
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'btn-secundario';
+        cancelBtn.style.marginLeft = '10px';
+        cancelBtn.textContent = 'Cancelar edición';
+        cancelBtn.onclick = cancelarEdicionPublicacion;
+        let form = document.querySelector('.form-publicacion');
+        if (form) form.appendChild(cancelBtn);
+    }
+
+    mostrarExito('Edita los campos y guarda para actualizar la publicación');
+}
+
+function cancelarEdicionPublicacion() {
+    publicacionEditId = null;
+    document.querySelector('.form-publicacion').reset();
+
+    let btnEnviar = document.querySelector('.form-publicacion button[type="submit"]');
+    if (btnEnviar) {
+        btnEnviar.textContent = 'Publicar';
+    }
+
+    let tituloForm = document.querySelector('.form-publicacion h3');
+    if (tituloForm) {
+        tituloForm.textContent = '📢 Crear Nueva Publicación';
+    }
 }
 
 async function cargarPublicacionesAdmin() {
@@ -428,9 +731,14 @@ async function cargarPublicacionesAdmin() {
                 </a>
             ` : ""}
 
+            <div class="btn-acciones">
+            <button onclick="editarPublicacionInicio(${pub.id})" class="btn-secundario">
+                ✏️ Editar
+            </button>
             <button onclick="eliminarPublicacionInicio(${pub.id})" class="btn-eliminar">
                 🗑️ Eliminar
             </button>
+        </div>
         `;
 
         lista.appendChild(card);
@@ -464,8 +772,18 @@ async function eliminarPublicacionInicio(id) {
 // GESTIÓN DE COMENTARIOS - APROBACIÓN
 // =========================
 
-function cargarComentariosAdmin() {
-    let todosCom = DB.obtenerTodosComentarios();
+async function cargarComentariosAdmin() {
+
+    const { data: todosCom, error } = await supabaseClient
+    .from("comentarios")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("❌ Error al cargar comentarios:", error);
+        return;
+    }
+
     let lista = document.getElementById('comentarios-lista');
     
     if(!lista) return;
@@ -474,15 +792,21 @@ function cargarComentariosAdmin() {
     let comentariosAprobados = [];
     
     // Separar comentarios
-    Object.entries(todosCom).forEach(([pagina, comentarios]) => {
-        comentarios.forEach(c => {
-            let item = {...c, pagina: pagina};
-            if(c.aprobado) {
-                comentariosAprobados.push(item);
-            } else {
-                comentariosPendientes.push(item);
-            }
-        });
+    todosCom.forEach(c => {
+        let item = {
+            id: c.id,
+            nombre: c.nombre,
+            comentario: c.mensaje,
+            fecha: c.fecha ? new Date(c.fecha).toLocaleDateString('es-ES') : (c.created_at ? new Date(c.created_at).toLocaleDateString('es-ES') : ''),
+            aprobado: c.aprobado,
+            publicacion_id: c.publicacion_id
+        };
+
+        if (c.aprobado) {
+            comentariosAprobados.push(item);
+        } else {
+            comentariosPendientes.push(item);
+        }
     });
     
     lista.innerHTML = '';
@@ -499,16 +823,16 @@ function cargarComentariosAdmin() {
             card.className = 'comentario-card pendiente';
             card.innerHTML = `
                 <div class="comentario-header">
-                    <h5>${sanitizarHTML(c.nombre)} - ${c.pagina}</h5>
+                    <h5>${sanitizarHTML(c.nombre)} - Publicación #${c.publicacion_id}</h5>
                     <span class="fecha">${c.fecha}</span>
                 </div>
-                <p>${sanitizarHTML(c.mensaje)}</p>
+                <p>${sanitizarHTML(c.comentario)}</p>
                 <div class="comentario-acciones">
-                    <button onclick="aprobarComentarioAdmin('${c.pagina}', ${c.id})" class="btn-aprobado">
+                    <button onclick="aprobarComentarioAdmin(${c.id})" class="btn-aprobado">
                         ✅ Aprobar
                     </button>
-                    <button onclick="rechazarComentarioAdmin('${c.pagina}', ${c.id})" class="btn-rechazado">
-                        ❌ Rechazar
+                    <button onclick="rechazarComentarioAdmin(${c.id})" class="btn-rechazado">
+                        ❌ Eliminar
                     </button>
                 </div>
             `;
@@ -528,13 +852,13 @@ function cargarComentariosAdmin() {
             card.className = 'comentario-card aprobado';
             card.innerHTML = `
                 <div class="comentario-header">
-                    <h5>${sanitizarHTML(c.nombre)} - ${c.pagina}</h5>
+                    <h5>${sanitizarHTML(c.nombre)} - Publicación #${c.publicacion_id}</h5>
                     <span class="fecha">${c.fecha}</span>
                 </div>
-                <p>${sanitizarHTML(c.mensaje)}</p>
+                <p>${sanitizarHTML(c.comentario)}</p>
                 <div class="comentario-acciones">
-                    <button onclick="rechazarComentarioAdmin('${c.pagina}', ${c.id})" class="btn-rechazado">
-                        ❌ Desaprobar
+                    <button onclick="rechazarComentarioAdmin(${c.id})" class="btn-rechazado">
+                        ❌ Eliminar
                     </button>
                 </div>
             `;
@@ -547,22 +871,47 @@ function cargarComentariosAdmin() {
     }
 }
 
-function aprobarComentarioAdmin(pagina, id) {
-    DB.aprobarComentario(pagina, id);
-    cargarComentariosAdmin();
-    cargarEstadisticas();
-    mostrarExito('Comentario aprobado');
+async function aprobarComentarioAdmin(id) {
+
+    const { error } = await supabaseClient
+        .from("comentarios")
+        .update({ aprobado: true })
+        .eq("id", id);
+
+    if (error) {
+        console.error("❌ Error al aprobar comentario:", error);
+        mostrarError("No fue posible aprobar el comentario.");
+        return;
+    }
+
+    await cargarComentariosAdmin();
+    await cargarEstadisticas();
+
+    mostrarExito("✅ Comentario aprobado correctamente");
+
 }
 
-function rechazarComentarioAdmin(pagina, id) {
-    if(!confirm('¿Rechazar este comentario? Se eliminará permanentemente.')) return;
-    
-    DB.rechazarComentario(pagina, id);
-    cargarComentariosAdmin();
-    cargarEstadisticas();
-    mostrarExito('Comentario rechazado');
-}
+async function rechazarComentarioAdmin(id) {
 
+    if (!confirm("¿Eliminar este comentario? Esta acción no se puede deshacer.")) return;
+
+    const { error } = await supabaseClient
+        .from("comentarios")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        console.error("❌ Error al eliminar comentario:", error);
+        mostrarError("No fue posible eliminar el comentario.");
+        return;
+    }
+
+    await cargarComentariosAdmin();
+    await cargarEstadisticas();
+
+    mostrarExito("🗑️ Comentario eliminado correctamente");
+
+}
 // =========================
 // GESTIÓN DE DOCENTES - PANEL ADMIN
 // =========================

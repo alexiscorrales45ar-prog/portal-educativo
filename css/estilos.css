@@ -364,38 +364,38 @@ nav a:focus{
 
 /* COMENTARIOS */
 .comentarios{
-    padding: 60px 20px;
+    padding: 40px 20px;
     background: white;
 }
 
 .comentarios h2{
     text-align: center;
-    font-size: 40px;
+    font-size: 32px;
     color: #1b4332;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .contenedor-comentarios{
-    max-width: 800px;
-    margin: 0 auto 40px;
+    max-width: 700px;
+    margin: 0 auto 30px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
 }
 
 .comentario{
     display: flex;
     gap: 15px;
     background: #f9f9f9;
-    padding: 20px;
+    padding: 16px;
     border-radius: 15px;
     border-left: 5px solid #2d6a4f;
     animation: aparecer 0.5s ease;
 }
 
 .comentario img{
-    width: 50px;
-    height: 50px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -415,12 +415,12 @@ nav a:focus{
 
 .encabezado-comentario h3{
     margin: 0;
-    font-size: 18px;
+    font-size: 17px;
     color: #1b4332;
 }
 
 .encabezado-comentario span{
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #999;
 }
 
@@ -432,26 +432,27 @@ nav a:focus{
 
 /* FORMULARIO COMENTARIOS */
 .formulario-comentario{
-    max-width: 800px;
+    max-width: 700px;
     margin: 0 auto;
     background: #f5f8f6;
-    padding: 30px;
+    padding: 22px;
     border-radius: 15px;
 }
 
 .formulario-comentario h3{
     color: #1b4332;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    font-size: 20px;
 }
 
 .formulario-comentario input,
 .formulario-comentario textarea{
     width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
+    padding: 10px;
+    margin-bottom: 14px;
     border: 2px solid #e0e0e0;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 15px;
     font-family: 'Baloo 2', cursive;
 }
 
@@ -459,21 +460,21 @@ nav a:focus{
 .formulario-comentario textarea:focus{
     outline: none;
     border-color: #2d6a4f;
-    box-shadow: 0 0 10px rgba(45, 106, 79, 0.2);
+    box-shadow: 0 0 10px rgba(45, 106, 79, 0.15);
 }
 
 .formulario-comentario textarea{
     resize: vertical;
-    min-height: 100px;
+    min-height: 90px;
 }
 
 .formulario-comentario button{
     background: linear-gradient(135deg, #2d6a4f, #40916c);
     color: white;
     border: none;
-    padding: 14px 30px;
+    padding: 12px 26px;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s;
@@ -481,8 +482,8 @@ nav a:focus{
 }
 
 .formulario-comentario button:hover{
-    transform: translateY(-2px);
-    box-shadow: 0px 8px 20px rgba(45, 106, 79, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0px 6px 16px rgba(45, 106, 79, 0.22);
 }
 
 /* INFORMACIÓN DE APROBACIÓN */
@@ -607,12 +608,37 @@ footer p{
 @media(max-width: 768px){
     .contenedor-header{
         flex-direction: column;
+        text-align: center;
     }
     
     .contenedor-header h1{
-        font-size: 24px;
+        font-size: 2rem;
+        line-height: 1.1;
     }
     
+    .contenedor-header p{
+        font-size: 0.98rem;
+        max-width: 90%;
+    }
+    
+    nav{
+        justify-content: center;
+        gap: 12px;
+    }
+    
+    nav a{
+        padding: 12px 18px;
+        font-size: 0.95rem;
+        min-width: 120px;
+    }
+    
+    .btn-panel-docente{
+        top: 18px;
+        right: 16px;
+        padding: 12px 18px;
+        font-size: 0.9rem;
+    }
+
     .hero h2{
         font-size: 38px;
     }

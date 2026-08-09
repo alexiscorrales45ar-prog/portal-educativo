@@ -101,13 +101,16 @@ header p {
 /* FORMULARIO ELEGANTE */
 .formulario-seccion {
     background: white;
-    padding: 50px;
+    padding: 44px;
     border-radius: 20px;
     box-shadow: 0px 4px 20px rgba(0,0,0,0.08);
-    margin-bottom: 50px;
-    border: 1px solid rgba(45, 106, 79, 0.05);
+    margin-bottom: 40px;
+    border: 1px solid rgba(45, 106, 79, 0.08);
     transition: all 0.3s ease;
     animation: slideInUp 0.5s ease;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .formulario-seccion:hover {
@@ -115,24 +118,26 @@ header p {
 }
 
 .formulario-seccion h3 {
-    font-size: 32px;
+    font-size: 26px;
     color: #1b4332;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     font-weight: 700;
 }
 
-.descripcion-panel {
-    color: #999;
+.form-subtitle {
+    color: #4a5d44;
     font-size: 15px;
-    margin-bottom: 30px;
-    letter-spacing: 0.3px;
+    margin-bottom: 28px;
+    letter-spacing: 0.2px;
+    max-width: 620px;
+    line-height: 1.5;
 }
 
 .form-contenido,
 .form-docente {
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 18px;
 }
 
 .form-grupo {
@@ -141,29 +146,30 @@ header p {
 }
 
 .form-grupo label {
-    font-weight: 700;
+    font-weight: 600;
     color: #2d6a4f;
-    margin-bottom: 10px;
-    font-size: 15px;
-    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    letter-spacing: 0.2px;
 }
 
 .form-grupo input,
 .form-grupo select,
 .form-grupo textarea {
-    padding: 16px 18px;
-    border: 2px solid #e8e8e8;
-    border-radius: 12px;
-    font-size: 16px;
+    padding: 14px 18px;
+    border: 1.8px solid #e8e8e8;
+    border-radius: 14px;
+    font-size: 15px;
     font-family: 'Baloo 2', cursive;
-    transition: all 0.3s ease;
-    background: white;
+    transition: all 0.25s ease;
+    background: #ffffff;
     color: #333;
+    min-height: 50px;
 }
 
 .form-grupo input::placeholder,
 .form-grupo textarea::placeholder {
-    color: #bbb;
+    color: #a8a8a8;
 }
 
 .form-grupo input:focus,
@@ -171,46 +177,88 @@ header p {
 .form-grupo textarea:focus {
     outline: none;
     border-color: #2d6a4f;
-    box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.1);
-    background: rgba(45, 106, 79, 0.01);
+    box-shadow: 0 0 0 6px rgba(45, 106, 79, 0.08);
+    background: #fbfff9;
 }
 
 .form-grupo textarea {
     resize: vertical;
-    min-height: 120px;
+    min-height: 130px;
     font-size: 15px;
 }
 
 .form-grupo small {
-    margin-top: 8px;
-    color: #999;
+    margin-top: 6px;
+    color: #6c7a5c;
     font-size: 13px;
     font-style: italic;
 }
 
+.archivo-grupo .file-upload-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border: 1.8px solid #e8e8e8;
+    border-radius: 16px;
+    background: #f7faf5;
+}
+
+.archivo-grupo .file-upload-title {
+    color: #2d6a4f;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.archivo-grupo input[type="file"] {
+    border: none;
+    padding: 0;
+}
+
+.archivo-grupo input[type="file"]::file-selector-button {
+    background: rgba(45, 106, 79, 0.1);
+    color: #2d6a4f;
+    border: 1px solid rgba(45, 106, 79, 0.2);
+    border-radius: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.archivo-grupo input[type="file"]::file-selector-button:hover {
+    background: rgba(45, 106, 79, 0.16);
+}
+
+.archivo-grupo input[type="file"]::file-selector-button:active {
+    transform: translateY(1px);
+}
+
 .btn-primario {
-    padding: 16px 40px;
+    padding: 14px 38px;
     background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 16px;
+    border-radius: 14px;
+    font-size: 15.5px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 10px;
-    box-shadow: 0px 4px 15px rgba(45, 106, 79, 0.2);
+    transition: all 0.25s ease;
+    margin-top: 12px;
+    box-shadow: 0px 6px 18px rgba(45, 106, 79, 0.2);
     font-family: 'Baloo 2', cursive;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
+    align-self: flex-end;
+    min-width: 210px;
 }
 
 .btn-primario:hover {
-    transform: translateY(-3px);
-    box-shadow: 0px 8px 25px rgba(45, 106, 79, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0px 10px 30px rgba(45, 106, 79, 0.3);
 }
 
 .btn-primario:active {
     transform: translateY(-1px);
+    box-shadow: 0px 6px 18px rgba(45, 106, 79, 0.25);
 }
 
 /* CONTENIDO CARGADO */
@@ -376,6 +424,46 @@ header p {
     box-shadow: 0px 4px 10px rgba(255, 107, 107, 0.2);
 }
 
+/* Compact list for admin publications */
+.lista-controls{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:12px;
+}
+.buscar-publicacion{
+    padding:10px 12px;
+    border:1px solid #e6e6e6;
+    border-radius:10px;
+    width:320px;
+    font-size:14px;
+}
+.lista-rows{display:flex;flex-direction:column;gap:8px}
+.lista-row{display:grid;grid-template-columns:70px 1fr 140px 120px 80px 160px;gap:12px;align-items:center;padding:10px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfbfb);border:1px solid #f0f0f0}
+.lista-row.header{background:transparent;border:none;font-weight:700;color:#444}
+.lista-row .col{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lista-row .title-col{font-weight:600;color:#1b4332}
+.lista-row .actions-col{display:flex;gap:8px;justify-content:flex-end}
+.lista-row .actions-col button{padding:6px 10px;border-radius:8px;border:none;cursor:pointer}
+.lista-row .actions-col .btn-ver{background:#2d6a4f;color:white}
+.lista-row .actions-col .btn-eliminar-list{background:#ff6b6b;color:white}
+.pagin-controls{display:flex;gap:6px;align-items:center;margin-top:8px}
+.pagin-controls button{padding:6px 10px;border-radius:6px;border:1px solid #e6e6e6;background:white;cursor:pointer}
+.pagin-controls button.active{background:#2d6a4f;color:white;border-color:transparent}
+.pagin-info{color:#666;font-size:13px;margin-bottom:6px}
+
+/* Responsive: stack columns on small screens */
+@media(max-width:720px){
+    .lista-row{grid-template-columns:1fr;align-items:flex-start;padding:12px}
+    .lista-row.header{display:none}
+    .lista-row .col{white-space:normal}
+    .lista-row .actions-col{justify-content:flex-start;margin-top:8px}
+    .buscar-publicacion{width:100%}
+}
+
+/* Modal detalles publicación */
+.modal-publicacion .modal-contenido{max-width:760px}
+
 /* ESTADÍSTICAS */
 .estadisticas {
     background: white;
@@ -473,7 +561,7 @@ header p {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
+    background: linear-gradient(180deg, #eaf1e8 0%, #dce8d9 45%, #d2dfcf 100%);
     position: relative;
     overflow: hidden;
 }
@@ -481,147 +569,155 @@ header p {
 .login-container::before {
     content: '';
     position: absolute;
-    width: 400px;
-    height: 400px;
-    background: rgba(255,255,255,0.05);
+    width: 360px;
+    height: 360px;
+    background: rgba(45, 106, 79, 0.08);
     border-radius: 50%;
-    top: -50px;
+    top: -80px;
     right: -50px;
 }
 
 .login-container::after {
     content: '';
     position: absolute;
-    width: 300px;
-    height: 300px;
-    background: rgba(255,255,255,0.05);
+    width: 260px;
+    height: 260px;
+    background: rgba(45, 106, 79, 0.06);
     border-radius: 50%;
-    bottom: -100px;
-    left: -50px;
+    bottom: -90px;
+    left: -40px;
 }
 
 .login-box {
     background: white;
-    padding: 60px;
-    border-radius: 25px;
-    box-shadow: 0px 20px 60px rgba(0,0,0,0.3);
-    max-width: 450px;
+    padding: 38px 34px;
+    border-radius: 22px;
+    box-shadow: 0px 18px 45px rgba(23, 50, 25, 0.12);
+    max-width: 470px;
     width: 100%;
     position: relative;
     z-index: 10;
-    animation: slideInUp 0.6s ease;
-    border: 1px solid rgba(255,255,255,0.1);
+    animation: slideInUp 0.55s ease;
+    border: 1px solid rgba(45, 106, 79, 0.12);
+}
+
+.login-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.login-logo {
+    width: 78px;
+    height: 78px;
+    object-fit: contain;
+    border-radius: 18px;
+    border: 1px solid rgba(45, 106, 79, 0.14);
+    background: #f6faf4;
+    padding: 10px;
 }
 
 .login-box h1 {
-    font-size: 36px;
-    background: linear-gradient(135deg, #1b4332, #2d6a4f);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin: 0 0 12px 0;
+    font-size: 30px;
+    color: #1f4e2e;
+    margin: 0;
     font-weight: 700;
 }
 
 .login-box p {
-    color: #999;
-    margin-bottom: 35px;
+    color: #6f7e6e;
+    margin: 0;
     font-size: 15px;
-    letter-spacing: 0.5px;
+    line-height: 1.6;
+    max-width: 360px;
 }
 
 .form-login {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 14px;
 }
 
 .form-login input {
-    padding: 16px 18px;
-    border: 2px solid #e8e8e8;
+    padding: 14px 16px;
+    border: 1.5px solid #dde6dc;
     border-radius: 12px;
     font-size: 15px;
     font-family: 'Baloo 2', cursive;
-    transition: all 0.3s ease;
-    background: white;
-    color: #333;
+    transition: all 0.25s ease;
+    background: #f9fbf7;
+    color: #25321f;
+    min-height: 50px;
 }
 
 .form-login input::placeholder {
-    color: #bbb;
+    color: #9fa792;
 }
 
 .form-login input:focus {
     outline: none;
     border-color: #2d6a4f;
-    box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.1);
-    background: rgba(45, 106, 79, 0.01);
+    box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.08);
+    background: #f5f9f2;
+}
+
+.login-recover {
+    margin: 0;
+    color: #69806f;
+    font-size: 14px;
+    text-align: right;
+    padding-right: 4px;
 }
 
 .form-login button {
-    padding: 16px;
+    padding: 14px 16px;
     background: linear-gradient(135deg, #2d6a4f, #40916c);
     color: white;
     border: none;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 15.5px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
     margin-top: 10px;
-    box-shadow: 0px 4px 15px rgba(45, 106, 79, 0.2);
+    box-shadow: 0px 6px 16px rgba(45, 106, 79, 0.18);
     font-family: 'Baloo 2', cursive;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    width: 100%;
+    min-height: 50px;
 }
 
 .form-login button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0px 8px 25px rgba(45, 106, 79, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0px 10px 26px rgba(45, 106, 79, 0.22);
 }
 
-.hint-login {
-    background: linear-gradient(135deg, #f0f7f4, #e8f5e9);
-    padding: 20px;
-    border-radius: 12px;
-    font-size: 14px;
-    margin: 25px 0;
-    border-left: 4px solid #2d6a4f;
-    animation: slideInUp 0.6s ease 0.2s both;
-}
-
-.hint-login strong {
-    display: block;
-    color: #2d6a4f;
-    margin-bottom: 10px;
-    font-weight: 700;
-    font-size: 15px;
-}
-
-.hint-login p {
-    margin: 6px 0;
-    color: #555;
-    line-height: 1.6;
+.form-login button:active {
+    transform: translateY(0);
+    box-shadow: 0px 6px 16px rgba(45, 106, 79, 0.18);
 }
 
 .link-volver {
     display: inline-block;
     text-align: center;
-    margin-top: 25px;
-    color: white;
+    margin-top: 20px;
+    color: #2d6a4f;
     text-decoration: none;
     font-weight: 600;
-    transition: all 0.3s ease;
-    background: rgba(255,255,255,0.1);
-    padding: 12px 24px;
-    border-radius: 10px;
-    border: 2px solid rgba(255,255,255,0.3);
+    transition: all 0.25s ease;
+    background: rgba(45, 106, 79, 0.08);
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(45, 106, 79, 0.12);
     font-family: 'Baloo 2', cursive;
 }
 
 .link-volver:hover {
-    background: rgba(255,255,255,0.2);
-    border-color: white;
-    transform: translateY(-2px);
+    background: rgba(45, 106, 79, 0.12);
+    transform: translateY(-1px);
 }
 
 .btn-logout {
@@ -996,6 +1092,26 @@ header p {
     
     .tab-btn {
         width: 100%;
+    }
+
+    .formulario-seccion {
+        padding: 24px;
+    }
+
+    .form-subtitle {
+        font-size: 14px;
+    }
+
+    .form-grupo input,
+    .form-grupo select,
+    .form-grupo textarea,
+    .archivo-grupo .file-upload-card {
+        width: 100%;
+    }
+
+    .btn-primario {
+        width: 100%;
+        align-self: stretch;
     }
 
     .panel-navegacion {
