@@ -19,24 +19,25 @@ const DB = {
         }
     },
     
-    agregarPublicacionInicio: async function(titulo, contenido, autor) {
+    agregarComentario: async function(publicacionId, nombre, mensaje) {
 
-        const { error } = await supabaseClient
-            .from("publicaciones")
+        const { data, error } = await supabaseClient
+            .from('comentarios')
             .insert([
                 {
-                    titulo: titulo,
-                    descripcion: contenido,
-                    seccion: "inicio"
+                    publicacion_id: publicacionId,
+                    nombre: nombre,
+                    mensaje: mensaje
                 }
-            ]);
+            ])
+            .select();
 
         if (error) {
-            console.error("❌ Error al guardar publicación:", error);
+            console.error('❌ Error al guardar comentario:', error);
             return false;
         }
 
-        console.log("✅ Publicación guardada correctamente");
+        console.log('✅ Comentario guardado en Supabase:', data);
 
         return true;
     },
@@ -110,7 +111,7 @@ const DB = {
 
         return true;
     },
-    
+
     agregarComentario: async function(publicacionId, nombre, mensaje) {
         const { data, error } = await supabaseClient
             .from('comentarios')
@@ -118,9 +119,7 @@ const DB = {
                 {
                     publicacion_id: publicacionId,
                     nombre: nombre,
-                    mensaje: mensaje,
-                    aprobado: false,
-                    fecha: new Date().toISOString()
+                    mensaje: mensaje
                 }
             ])
             .select();
@@ -134,19 +133,14 @@ const DB = {
 
         return true;
     },
-    
-    obtenerComentarios: async function(publicacionId, soloAprobados = true) {
-        let query = supabaseClient
+    obtenerComentarios: async function(publicacionId) {
+
+        const { data, error } = await supabaseClient
             .from('comentarios')
             .select('*')
             .eq('publicacion_id', publicacionId)
             .order('created_at', { ascending: false });
 
-        if (soloAprobados) {
-            query = query.eq('aprobado', true);
-        }
-
-        const { data, error } = await query;
         if (error) {
             console.error('❌ Error al obtener comentarios:', error);
             return [];
@@ -316,10 +310,10 @@ async function cargarComentariosPublicacion(publicacionId) {
     if (!contenedor) return;
 
     contenedor.innerHTML = "<p class='sin-comentarios'>Cargando comentarios...</p>";
-    const comentarios = await DB.obtenerComentarios(publicacionId, true);
-
+    const comentarios = await DB.obtenerComentarios(publicacionId);
+    
     if (!comentarios || comentarios.length === 0) {
-        contenedor.innerHTML = '<p class="sin-comentarios">No hay comentarios aprobados aún.</p>';
+        contenedor.innerHTML = '<p class="sin-comentarios">No hay comentarios aún.</p>';
         return;
     }
 
@@ -375,7 +369,11 @@ function abrirModalComentario(publicacionId) {
     modal.innerHTML = `
         <div style="background:#fff;padding:18px;border-radius:8px;max-width:520px;width:92%;box-shadow:0 6px 20px rgba(0,0,0,0.12);">
             <h3 style="margin-top:0;">Deja tu comentario</h3>
-            <p class="info-aprobacion">ℹ️ Tu comentario será revisado por un docente antes de publicarse</p>
+
+            <p class="info-comentario">
+    💬          Tu comentario aparecerá inmediatamente después de enviarlo.
+            </p>
+
             <input type="text" id="modal-nombre-${publicacionId}" placeholder="Tu nombre" style="width:100%;padding:8px;margin:8px 0;border:1px solid #ddd;border-radius:6px;">
             <textarea id="modal-mensaje-${publicacionId}" placeholder="Escribe tu comentario" style="width:100%;height:110px;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;"></textarea>
             <div style="display:flex;gap:8px;justify-content:flex-end;">
@@ -434,7 +432,7 @@ async function agregarComentarioModal(publicacionId) {
     if (modal) modal.style.display = 'none';
 
     await cargarComentariosPublicacion(publicacionId);
-    mostrarExito("✅ Comentario enviado - Pendiente de aprobación del docente");
+    mostrarExito("✅ Comentario publicado correctamente");
 }
 
 // =========================

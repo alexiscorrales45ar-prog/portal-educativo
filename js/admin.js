@@ -775,125 +775,69 @@ async function eliminarPublicacionInicio(id) {
 async function cargarComentariosAdmin() {
 
     const { data: todosCom, error } = await supabaseClient
-    .from("comentarios")
-    .select("*")
-    .order("created_at", { ascending: false });
+        .from("comentarios")
+        .select("*")
+        .order("created_at", { ascending: false });
 
     if (error) {
         console.error("❌ Error al cargar comentarios:", error);
         return;
     }
 
-    let lista = document.getElementById('comentarios-lista');
-    
-    if(!lista) return;
-    
-    let comentariosPendientes = [];
-    let comentariosAprobados = [];
-    
-    // Separar comentarios
-    todosCom.forEach(c => {
-        let item = {
-            id: c.id,
-            nombre: c.nombre,
-            comentario: c.mensaje,
-            fecha: c.fecha ? new Date(c.fecha).toLocaleDateString('es-ES') : (c.created_at ? new Date(c.created_at).toLocaleDateString('es-ES') : ''),
-            aprobado: c.aprobado,
-            publicacion_id: c.publicacion_id
-        };
+    const lista = document.getElementById('comentarios-lista');
 
-        if (c.aprobado) {
-            comentariosAprobados.push(item);
-        } else {
-            comentariosPendientes.push(item);
-        }
-    });
-    
+    if (!lista) return;
+
     lista.innerHTML = '';
-    
-    // Mostrar comentarios pendientes
-    if(comentariosPendientes.length > 0) {
-        let titulo = document.createElement('h4');
-        titulo.className = 'comentarios-titulo';
-        titulo.textContent = '⏳ Comentarios Pendientes de Aprobación (' + comentariosPendientes.length + ')';
-        lista.appendChild(titulo);
-        
-        comentariosPendientes.forEach(c => {
-            let card = document.createElement('div');
-            card.className = 'comentario-card pendiente';
-            card.innerHTML = `
-                <div class="comentario-header">
-                    <h5>${sanitizarHTML(c.nombre)} - Publicación #${c.publicacion_id}</h5>
-                    <span class="fecha">${c.fecha}</span>
-                </div>
-                <p>${sanitizarHTML(c.comentario)}</p>
-                <div class="comentario-acciones">
-                    <button onclick="aprobarComentarioAdmin(${c.id})" class="btn-aprobado">
-                        ✅ Aprobar
-                    </button>
-                    <button onclick="rechazarComentarioAdmin(${c.id})" class="btn-rechazado">
-                        ❌ Eliminar
-                    </button>
-                </div>
-            `;
-            lista.appendChild(card);
-        });
-    }
-    
-    // Mostrar comentarios aprobados
-    if(comentariosAprobados.length > 0) {
-        let titulo = document.createElement('h4');
-        titulo.className = 'comentarios-titulo';
-        titulo.textContent = '✅ Comentarios Aprobados (' + comentariosAprobados.length + ')';
-        lista.appendChild(titulo);
-        
-        comentariosAprobados.forEach(c => {
-            let card = document.createElement('div');
-            card.className = 'comentario-card aprobado';
-            card.innerHTML = `
-                <div class="comentario-header">
-                    <h5>${sanitizarHTML(c.nombre)} - Publicación #${c.publicacion_id}</h5>
-                    <span class="fecha">${c.fecha}</span>
-                </div>
-                <p>${sanitizarHTML(c.comentario)}</p>
-                <div class="comentario-acciones">
-                    <button onclick="rechazarComentarioAdmin(${c.id})" class="btn-rechazado">
-                        ❌ Eliminar
-                    </button>
-                </div>
-            `;
-            lista.appendChild(card);
-        });
-    }
-    
-    if(comentariosPendientes.length === 0 && comentariosAprobados.length === 0) {
-        lista.innerHTML = '<p class="sin-contenido">No hay comentarios aún</p>';
-    }
-}
 
-async function aprobarComentarioAdmin(id) {
-
-    const { error } = await supabaseClient
-        .from("comentarios")
-        .update({ aprobado: true })
-        .eq("id", id);
-
-    if (error) {
-        console.error("❌ Error al aprobar comentario:", error);
-        mostrarError("No fue posible aprobar el comentario.");
+    if (!todosCom || todosCom.length === 0) {
+        lista.innerHTML = '<p class="sin-contenido">No hay comentarios aún.</p>';
         return;
     }
 
-    await cargarComentariosAdmin();
-    await cargarEstadisticas();
+    todosCom.forEach(c => {
 
-    mostrarExito("✅ Comentario aprobado correctamente");
+        const fecha = c.fecha
+            ? new Date(c.fecha).toLocaleDateString('es-ES')
+            : c.created_at
+                ? new Date(c.created_at).toLocaleDateString('es-ES')
+                : '';
 
+        const card = document.createElement('div');
+
+        card.className = 'comentario-card';
+
+        card.innerHTML = `
+            <div class="comentario-header">
+                <h5>
+                    ${sanitizarHTML(c.nombre)}
+                    - Publicación #${c.publicacion_id}
+                </h5>
+
+                <span class="fecha">${fecha}</span>
+            </div>
+
+            <p>${sanitizarHTML(c.mensaje)}</p>
+
+            <div class="comentario-acciones">
+                <button
+                    onclick="rechazarComentarioAdmin(${c.id})"
+                    class="btn-rechazado">
+                    🗑️ Eliminar
+                </button>
+            </div>
+        `;
+
+        lista.appendChild(card);
+    });
 }
 
-async function rechazarComentarioAdmin(id) {
 
-    if (!confirm("¿Eliminar este comentario? Esta acción no se puede deshacer.")) return;
+async function eliminarComentarioAdmin(id) {
+
+    if (!confirm("¿Eliminar este comentario? Esta acción no se puede deshacer.")) {
+        return;
+    }
 
     const { error } = await supabaseClient
         .from("comentarios")
@@ -910,128 +854,541 @@ async function rechazarComentarioAdmin(id) {
     await cargarEstadisticas();
 
     mostrarExito("🗑️ Comentario eliminado correctamente");
-
 }
 // =========================
 // GESTIÓN DE DOCENTES - PANEL ADMIN
 // =========================
 
-function cargarDocentesAdmin() {
-    let docentesRegistrados = JSON.parse(localStorage.getItem('docentes_registrados')) || {};
-    let lista = document.getElementById('docentes-lista');
-    
-    if(!lista) return;
-    
-    lista.innerHTML = '';
-    
-    if(Object.keys(docentesRegistrados).length === 0) {
-        lista.innerHTML = '<p class="sin-contenido">No hay docentes registrados. Agrega uno nuevo con el formulario arriba.</p>';
-        return;
-    }
-    
-    Object.entries(docentesRegistrados).forEach(([email, datos]) => {
-        let card = document.createElement('div');
-        card.className = 'docente-card';
-        card.innerHTML = `
-            <div class="docente-header">
-                <div>
-                    <h4>${sanitizarHTML(datos.nombre)}</h4>
-                    <p class="docente-email">${sanitizarHTML(email)}</p>
-                    <p class="docente-rol">📌 ${sanitizarHTML(datos.rol || 'Sin rol asignado')}</p>
+async function cargarDocentesAdmin() {
+    const lista = document.getElementById('docentes-lista');
+
+    if (!lista) return;
+
+    lista.innerHTML = `
+        <p class="sin-contenido">Cargando usuarios...</p>
+    `;
+
+    try {
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                'crear-usuario-admin',
+                {
+                    body: {
+                        accion: 'listar'
+                    }
+                }
+            );
+
+        if (error) {
+            console.error(
+                '❌ Error al cargar usuarios:',
+                error
+            );
+
+            lista.innerHTML = `
+                <p class="sin-contenido">
+                    No fue posible cargar los usuarios.
+                </p>
+            `;
+
+            return;
+        }
+
+        if (!data || data.success !== true) {
+            console.error(
+                '❌ Error devuelto por Edge Function:',
+                data
+            );
+
+            lista.innerHTML = `
+                <p class="sin-contenido">
+                    ${sanitizarHTML(
+                        data?.error ||
+                        'No fue posible cargar los usuarios.'
+                    )}
+                </p>
+            `;
+
+            return;
+        }
+
+        const usuarios = data.usuarios || [];
+
+        lista.innerHTML = '';
+
+        if (usuarios.length === 0) {
+            lista.innerHTML = `
+                <p class="sin-contenido">
+                    No hay usuarios registrados.
+                </p>
+            `;
+            return;
+        }
+
+        usuarios.forEach(usuario => {
+
+            const card =
+                document.createElement('div');
+
+            card.className = 'docente-card';
+
+            const nombre =
+                usuario.nombre ||
+                usuario.email ||
+                'Usuario';
+
+            const email =
+                usuario.email ||
+                '';
+
+            const tipo =
+                usuario.tipo === 'admin'
+                    ? 'Administrador'
+                    : 'Docente';
+
+            const icono =
+                usuario.tipo === 'admin'
+                    ? '🔐'
+                    : '👨‍🏫';
+
+            const fecha =
+                usuario.creado
+                    ? new Date(
+                        usuario.creado
+                    ).toLocaleDateString(
+                        'es-ES'
+                    )
+                    : '';
+
+            card.innerHTML = `
+                <div class="docente-header">
+                    <div>
+                        <h4>
+                            ${sanitizarHTML(nombre)}
+                        </h4>
+
+                        <p class="docente-email">
+                            ${sanitizarHTML(email)}
+                        </p>
+
+                        <p class="docente-rol">
+                            📌 ${icono}
+                            ${sanitizarHTML(tipo)}
+                        </p>
+
+                        ${
+                            fecha
+                                ? `
+                                <small>
+                                    Registrado:
+                                    ${fecha}
+                                </small>
+                                `
+                                : ''
+                        }
+                    </div>
+
+                    <span class="estado-activo">
+                        ✅ Activo
+                    </span>
                 </div>
-                <span class="estado-activo">✅ Activo</span>
-            </div>
-            <div class="docente-acciones">
-                <button onclick="editarDocente('${email}')" class="btn-editar">
-                    ✏️ Editar
-                </button>
-                <button onclick="eliminarDocente('${email}')" class="btn-eliminar">
-                    🗑️ Eliminar
-                </button>
-            </div>
+
+                <div class="docente-acciones">
+
+                    <button
+                        onclick="editarDocente('${sanitizarHTML(email)}')"
+                        class="btn-editar">
+                        ✏️ Editar
+                    </button>
+
+                    <button
+                        onclick="eliminarDocente('${sanitizarHTML(email)}')"
+                        class="btn-eliminar">
+                        🗑️ Eliminar
+                    </button>
+
+                </div>
+            `;
+
+            lista.appendChild(card);
+        });
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error inesperado al cargar usuarios:',
+            error
+        );
+
+        lista.innerHTML = `
+            <p class="sin-contenido">
+                Ocurrió un error al cargar los usuarios.
+            </p>
         `;
-        lista.appendChild(card);
-    });
+    }
 }
 
-function guardarDocente(e) {
+async function guardarDocente(e) {
     e.preventDefault();
-    
-    let nombre = document.getElementById('docente-nombre').value.trim();
-    let email = document.getElementById('docente-email').value.trim();
-    let password = document.getElementById('docente-password').value.trim();
-    let rol = document.getElementById('docente-rol').value.trim();
-    
-    if(nombre.length < 3) {
-        mostrarError('El nombre debe tener al menos 3 caracteres');
+
+    const nombre = document.getElementById('docente-nombre').value.trim();
+    const email = document.getElementById('docente-email').value.trim().toLowerCase();
+    const password = document.getElementById('docente-password').value;
+    const rol = document.getElementById('docente-rol').value;
+
+    // =========================
+    // VALIDACIONES
+    // =========================
+
+    if (nombre.length < 3) {
+        mostrarError('El nombre debe tener al menos 3 caracteres.');
         return;
     }
-    
-    if(!email.includes('@')) {
-        mostrarError('Ingresa un email válido');
+
+    if (!email || !email.includes('@')) {
+        mostrarError('Ingresa un correo electrónico válido.');
         return;
     }
-    
-    if(password.length < 6) {
-        mostrarError('La contraseña debe tener al menos 6 caracteres');
+
+    if (password.length < 6) {
+        mostrarError('La contraseña debe tener al menos 6 caracteres.');
         return;
     }
-    
-    if(!rol) {
-        mostrarError('Debes seleccionar un rol para el docente');
+
+    if (rol !== 'docente' && rol !== 'admin') {
+        mostrarError('Debes seleccionar un rol válido.');
         return;
     }
-    
-    let docentesRegistrados = JSON.parse(localStorage.getItem('docentes_registrados')) || {};
-    
-    docentesRegistrados[email] = {
-        nombre: nombre,
-        password: password,
-        rol: rol,
-        fecha_registro: new Date().toLocaleDateString('es-ES')
-    };
-    
-    localStorage.setItem('docentes_registrados', JSON.stringify(docentesRegistrados));
-    
-    document.querySelector('.form-docente').reset();
-    cargarDocentesAdmin();
-    mostrarExito(`Docente ${nombre} registrado correctamente como ${rol}`);
+
+    // =========================
+    // CONFIRMAR CREACIÓN
+    // =========================
+
+    const nombreRol = rol === 'admin'
+        ? 'Administrador'
+        : 'Docente';
+
+    if (
+        !confirm(
+            `¿Crear este usuario?\n\n` +
+            `Nombre: ${nombre}\n` +
+            `Correo: ${email}\n` +
+            `Rol: ${nombreRol}`
+        )
+    ) {
+        return;
+    }
+
+    // =========================
+    // DESACTIVAR BOTÓN
+    // =========================
+
+    const formulario = e.target;
+    const boton = formulario.querySelector('button[type="submit"]');
+
+    if (boton) {
+        boton.disabled = true;
+        boton.textContent = 'Creando usuario...';
+    }
+
+    try {
+
+        // =========================
+        // VERIFICAR SESIÓN ACTUAL
+        // =========================
+
+        const {
+            data: { session },
+            error: sessionError
+        } = await supabaseClient.auth.getSession();
+
+        if (sessionError || !session) {
+            mostrarError('Tu sesión ha expirado. Inicia sesión nuevamente.');
+            return;
+        }
+
+        // =========================
+        // LLAMAR EDGE FUNCTION
+        // =========================
+
+        const { data, error } = await supabaseClient.functions.invoke(
+            'crear-usuario-admin',
+            {
+                body: {
+                    nombre: nombre,
+                    email: email,
+                    password: password,
+                    tipo: rol
+                }
+            }
+        );
+
+        // =========================
+        // ERROR DE LA FUNCIÓN
+        // =========================
+
+        if (error) {
+            console.error(
+                '❌ Error al crear usuario:',
+                error
+            );
+
+            mostrarError(
+                'No fue posible crear el usuario.'
+            );
+
+            return;
+        }
+
+        // La Edge Function también puede devolver
+        // un error dentro de data
+        if (!data || data.success !== true) {
+
+            console.error(
+                '❌ Error devuelto por Edge Function:',
+                data
+            );
+
+            mostrarError(
+                data?.error ||
+                'No fue posible crear el usuario.'
+            );
+
+            return;
+        }
+
+        // =========================
+        // ÉXITO
+        // =========================
+
+        console.log(
+            '✅ Usuario creado correctamente:',
+            data.usuario
+        );
+
+        formulario.reset();
+
+        mostrarExito(
+            `✅ ${nombreRol} ${nombre} creado correctamente.`
+        );
+
+        // Recargar la lista de usuarios.
+        // Actualmente cargarDocentesAdmin()
+        // todavía usa localStorage, por lo que
+        // la reemplazaremos posteriormente.
+        //
+        // NO dependemos de localStorage para crear
+        // el usuario.
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error inesperado al crear usuario:',
+            error
+        );
+
+        mostrarError(
+            'Ocurrió un error inesperado al crear el usuario.'
+        );
+
+    } finally {
+
+        // =========================
+        // RESTAURAR BOTÓN
+        // =========================
+
+        if (boton) {
+            boton.disabled = false;
+            boton.textContent = 'Crear Usuario';
+        }
+    }
 }
 
-function eliminarDocente(email) {
-    if(!confirm('¿Eliminar este docente? Perderá acceso al panel.')) return;
-    
-    let docentesRegistrados = JSON.parse(localStorage.getItem('docentes_registrados')) || {};
-    let nombre = docentesRegistrados[email].nombre;
-    
-    delete docentesRegistrados[email];
-    localStorage.setItem('docentes_registrados', JSON.stringify(docentesRegistrados));
-    
-    cargarDocentesAdmin();
-    mostrarExito(`Docente ${nombre} eliminado`);
-}
+async function eliminarDocente(email) {
 
-function editarDocente(email) {
-    let docentesRegistrados = JSON.parse(localStorage.getItem('docentes_registrados')) || {};
-    let datos = docentesRegistrados[email];
-    
-    let nuevoNombre = prompt('Nuevo nombre:', datos.nombre);
-    if(nuevoNombre === null) return;
-    
-    let nuevaPassword = prompt('Nueva contraseña (mín. 6 caracteres, dejar vacío para no cambiar):', '');
-    if(nuevaPassword === null) return;
-    
-    if(nuevaPassword && nuevaPassword.length < 6) {
-        mostrarError('La contraseña debe tener mínimo 6 caracteres');
+    if (!confirm(
+        `¿Eliminar al usuario ${email}?\n\n` +
+        `Perderá inmediatamente el acceso al panel.`
+    )) {
         return;
     }
-    
-    datos.nombre = nuevoNombre;
-    if(nuevaPassword) {
-        datos.password = nuevaPassword;
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                'crear-usuario-admin',
+                {
+                    body: {
+                        accion: 'eliminar',
+                        email: email
+                    }
+                }
+            );
+
+        if (error) {
+            console.error(
+                '❌ Error al eliminar usuario:',
+                error
+            );
+
+            mostrarError(
+                'No fue posible eliminar el usuario.'
+            );
+
+            return;
+        }
+
+        if (!data || data.success !== true) {
+
+            console.error(
+                '❌ Error devuelto por Edge Function:',
+                data
+            );
+
+            mostrarError(
+                data?.error ||
+                'No fue posible eliminar el usuario.'
+            );
+
+            return;
+        }
+
+        console.log(
+            '✅ Usuario eliminado:',
+            email
+        );
+
+        await cargarDocentesAdmin();
+
+        mostrarExito(
+            `🗑️ Usuario ${email} eliminado correctamente.`
+        );
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error inesperado al eliminar:',
+            error
+        );
+
+        mostrarError(
+            'Ocurrió un error al eliminar el usuario.'
+        );
     }
-    
-    localStorage.setItem('docentes_registrados', JSON.stringify(docentesRegistrados));
-    cargarDocentesAdmin();
-    mostrarExito(`Docente ${nuevoNombre} actualizado correctamente`);
+}
+
+async function editarDocente(email) {
+
+    const nuevoNombre = prompt(
+        'Nuevo nombre:',
+        ''
+    );
+
+    if (nuevoNombre === null) {
+        return;
+    }
+
+    const nombre = nuevoNombre.trim();
+
+    if (nombre.length < 3) {
+        mostrarError(
+            'El nombre debe tener al menos 3 caracteres.'
+        );
+        return;
+    }
+
+    const nuevaPassword = prompt(
+        'Nueva contraseña (mínimo 6 caracteres).\n' +
+        'Deja vacío si no deseas cambiarla:',
+        ''
+    );
+
+    if (nuevaPassword === null) {
+        return;
+    }
+
+    if (
+        nuevaPassword &&
+        nuevaPassword.length < 6
+    ) {
+        mostrarError(
+            'La contraseña debe tener mínimo 6 caracteres.'
+        );
+        return;
+    }
+
+    if (!confirm(
+        `¿Guardar los cambios para ${email}?`
+    )) {
+        return;
+    }
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                'crear-usuario-admin',
+                {
+                    body: {
+                        accion: 'editar',
+                        email: email,
+                        nombre: nombre,
+                        password:
+                            nuevaPassword || undefined
+                    }
+                }
+            );
+
+        if (error) {
+
+            console.error(
+                '❌ Error al actualizar usuario:',
+                error
+            );
+
+            mostrarError(
+                'No fue posible actualizar el usuario.'
+            );
+
+            return;
+        }
+
+        if (!data || data.success !== true) {
+
+            console.error(
+                '❌ Error devuelto por Edge Function:',
+                data
+            );
+
+            mostrarError(
+                data?.error ||
+                'No fue posible actualizar el usuario.'
+            );
+
+            return;
+        }
+
+        console.log(
+            '✅ Usuario actualizado:',
+            data.usuario
+        );
+
+        await cargarDocentesAdmin();
+
+        mostrarExito(
+            `✅ Usuario ${nombre} actualizado correctamente.`
+        );
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error inesperado al actualizar:',
+            error
+        );
+
+        mostrarError(
+            'Ocurrió un error inesperado.'
+        );
+    }
 }

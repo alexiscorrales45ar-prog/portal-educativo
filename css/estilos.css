@@ -364,70 +364,176 @@ nav a:focus{
 
 /* COMENTARIOS */
 .comentarios{
-    padding: 40px 20px;
+    padding: 32px 20px;
     background: white;
 }
 
 .comentarios h2{
     text-align: center;
-    font-size: 32px;
+    font-size: 30px;
     color: #1b4332;
-    margin-bottom: 30px;
+    margin-bottom: 26px;
 }
 
 .contenedor-comentarios{
-    max-width: 700px;
-    margin: 0 auto 30px;
+    max-width: 720px;
+    margin: 0 auto 24px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
 }
 
 .comentario{
     display: flex;
-    gap: 15px;
-    background: #f9f9f9;
-    padding: 16px;
-    border-radius: 15px;
-    border-left: 5px solid #2d6a4f;
-    animation: aparecer 0.5s ease;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f7fbf9;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border-left: 3px solid #2d6a4f;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    animation: aparecer 0.35s ease;
 }
 
 .comentario img{
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     object-fit: cover;
+    flex-shrink: 0;
 }
 
 .texto-comentario{
     flex: 1;
+    min-width: 0;
 }
 
 .encabezado-comentario{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
 }
 
 .encabezado-comentario h3{
     margin: 0;
-    font-size: 17px;
+    font-size: 15px;
     color: #1b4332;
+    font-weight: 600;
 }
 
 .encabezado-comentario span{
-    font-size: 0.85rem;
-    color: #999;
+    font-size: 0.78rem;
+    color: #6b7a73;
 }
 
 .texto-comentario p{
-    color: #555;
-    line-height: 1.6;
+    color: #444;
+    line-height: 1.55;
+    font-size: 14px;
     margin: 0;
+}
+
+.formulario-comentario-boton{
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.btn-comentar{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid #2d6a4f;
+    background: rgba(45, 106, 79, 0.08);
+    color: #1f4d2f;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-comentar:hover{
+    background: rgba(45, 106, 79, 0.16);
+    transform: translateY(-1px);
+}
+
+.modal-comentario{
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+    z-index: 9999;
+    padding: 16px;
+}
+
+.modal-comentario > div{
+    width: min(520px, 100%);
+    background: #ffffff;
+    padding: 22px;
+    border-radius: 16px;
+    box-shadow: 0 18px 60px rgba(0,0,0,0.14);
+}
+
+.modal-comentario h3{
+    margin-top: 0;
+    font-size: 20px;
+    color: #1b4332;
+}
+
+.modal-comentario .info-comentario{
+    margin: 0 0 16px;
+    color: #4b5d58;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.modal-comentario input,
+.modal-comentario textarea{
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    border: 1px solid #d5e2da;
+    border-radius: 14px;
+    background: #fafcf8;
+    font-size: 0.95rem;
+    color: #2e3c34;
+    font-family: inherit;
+}
+
+.modal-comentario textarea{
+    min-height: 120px;
+    resize: vertical;
+}
+
+.modal-comentario button{
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    min-width: 100px;
+}
+
+.modal-comentario .btn-secundario{
+    background: #f5f8f5;
+    color: #2d6a4f;
+    border: 1px solid #d5e2da;
+}
+
+.modal-comentario .btn-primario{
+    background: linear-gradient(135deg, #2d6a4f, #40916c);
+    color: #ffffff;
+    border: 1px solid transparent;
+}
+
+.modal-comentario .btn-secundario:hover,
+.modal-comentario .btn-primario:hover{
+    opacity: 0.95;
 }
 
 /* FORMULARIO COMENTARIOS */
