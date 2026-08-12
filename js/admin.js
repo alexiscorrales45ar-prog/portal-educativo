@@ -244,63 +244,154 @@ function cambiarPanel(panel) {
 
 async function guardarContenido(e) {
     e.preventDefault();
-    
+
     let seccion = document.getElementById('seccion').value;
     let titulo = document.getElementById('titulo').value.trim();
     let descripcion = document.getElementById('descripcion').value.trim();
     let archivo = document.getElementById('archivo').value.trim();
     let archivoFinal = archivo;
-    // Si hay un archivo seleccionado, subirlo a Supabase Storage y usar su URL pública
-    try {
-        let fileInput = document.getElementById('archivo-file');
-        if (fileInput && fileInput.files && fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-            const path = `publicaciones/${Date.now()}_${safeName}`;
-            const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('public').upload(path, file);
-            if (uploadError) {
-                console.error('Error subiendo imagen:', uploadError);
-                mostrarError('No fue posible subir la imagen. Intenta nuevamente.');
-                return;
-            }
-            const { data: publicData } = await supabaseClient.storage.from('public').getPublicUrl(path);
-            archivoFinal = (publicData && publicData.publicUrl) ? publicData.publicUrl : archivoFinal;
-        }
-    } catch (err) {
-        console.error('Error al procesar la imagen:', err);
-        mostrarError('Error al procesar la imagen.');
-        return;
-    }
-    
-    if(!seccion) {
+
+    // ==========================================
+    // VALIDAR DATOS BÁSICOS
+    // ==========================================
+
+    if (!seccion) {
         mostrarError('Debes seleccionar una sección');
         return;
     }
-    
-    if(titulo.length < 5) {
+
+    if (titulo.length < 5) {
         mostrarError('El título debe tener al menos 5 caracteres');
         return;
     }
-    
-    if(descripcion.length < 10) {
+
+    if (descripcion.length < 10) {
         mostrarError('La descripción debe tener al menos 10 caracteres');
         return;
     }
-    
-    const guardado = await DB.agregarContenido(seccion, titulo, descripcion, archivoFinal);
-    if (!guardado) {
-        mostrarError('No fue posible guardar el contenido. Verifica la conexión con Supabase.');
+
+    // ==========================================
+    // SUBIR IMAGEN A SUPABASE STORAGE
+    // ==========================================
+
+    try {
+        const fileInput = document.getElementById('archivo-file');
+
+        if (
+            fileInput &&
+            fileInput.files &&
+            fileInput.files.length > 0
+        ) {
+            const file = fileInput.files[0];
+
+            const safeName = file.name.replace(
+                /[^a-zA-Z0-9_.-]/g,
+                '_'
+            );
+
+            // Nombre único dentro del bucket publicaciones
+            const path = `${Date.now()}_${safeName}`;
+
+            console.log('📤 Subiendo imagen:', path);
+
+            const {
+                data: uploadData,
+                error: uploadError
+            } = await supabaseClient.storage
+                .from('publicaciones')
+                .upload(path, file);
+
+            if (uploadError) {
+                console.error(
+                    '❌ Error subiendo imagen:',
+                    uploadError
+                );
+
+                mostrarError(
+                    'No fue posible subir la imagen. Intenta nuevamente.'
+                );
+
+                return;
+            }
+
+            console.log(
+                '✅ Imagen subida correctamente:',
+                uploadData
+            );
+
+            // ==========================================
+            // OBTENER URL PÚBLICA
+            // ==========================================
+
+            const {
+                data: publicData
+            } = supabaseClient.storage
+                .from('publicaciones')
+                .getPublicUrl(path);
+
+            if (
+                publicData &&
+                publicData.publicUrl
+            ) {
+                archivoFinal = publicData.publicUrl;
+
+                console.log(
+                    '🔗 URL pública:',
+                    archivoFinal
+                );
+            }
+        }
+
+    } catch (err) {
+
+        console.error(
+            '❌ Error al procesar la imagen:',
+            err
+        );
+
+        mostrarError(
+            'Error al procesar la imagen.'
+        );
+
         return;
     }
-    
-    // Limpiar formulario
-    document.querySelector('.form-contenido').reset();
-    
-    // Actualizar vista
+
+    // ==========================================
+    // GUARDAR CONTENIDO EN LA BASE DE DATOS
+    // ==========================================
+
+    const guardado = await DB.agregarContenido(
+        seccion,
+        titulo,
+        descripcion,
+        archivoFinal
+    );
+
+    if (!guardado) {
+        mostrarError(
+            'No fue posible guardar el contenido. Verifica la conexión con Supabase.'
+        );
+        return;
+    }
+
+    // ==========================================
+    // LIMPIAR FORMULARIO
+    // ==========================================
+
+    document
+        .querySelector('.form-contenido')
+        .reset();
+
+    // ==========================================
+    // ACTUALIZAR VISTA
+    // ==========================================
+
     await mostrarSeccion(seccion);
     await cargarEstadisticas();
-    
-    mostrarExito('Contenido cargado correctamente');
+
+    mostrarExito(
+        '✅ Contenido cargado correctamente'
+    );
 }
 
 async function mostrarSeccion(seccion) {
@@ -572,22 +663,7 @@ async function cargarEstadisticas() {
         console.error('❌ Error al contar comentarios:', errorTotal);
     }
 
-    const { count: pendientesComentarios, error: errorPendientes } = await supabaseClient
-        .from('comentarios')
-        .select('*', { count: 'exact', head: true })
-        .eq('aprobado', false);
-
-    if (errorPendientes) {
-        console.error('❌ Error al contar comentarios pendientes:', errorPendientes);
-    }
-
     document.getElementById("stat-comentarios").textContent = totalComentarios ?? 0;
-
-    const pendientes = document.getElementById("stat-pendientes");
-
-    if (pendientes) {
-        pendientes.textContent = pendientesComentarios ?? 0;
-    }
 
 }
 
@@ -595,8 +671,8 @@ async function guardarPublicacionInicio(e) {
 
     e.preventDefault();
 
-    let titulo = document.getElementById('titulo-pub').value.trim();
-    let contenido = document.getElementById('contenido-pub').value.trim();
+    const titulo = document.getElementById('titulo-pub').value.trim();
+    const contenido = document.getElementById('contenido-pub').value.trim();
 
     if (titulo.length < 5) {
         mostrarError('El título debe tener al menos 5 caracteres');
@@ -608,28 +684,148 @@ async function guardarPublicacionInicio(e) {
         return;
     }
 
-    if (publicacionEditId) {
-        const actualizado = await DB.actualizarPublicacionInicio(publicacionEditId, titulo, contenido);
-        if (!actualizado) {
-            mostrarError('No fue posible actualizar la publicación.');
-            return;
+    let archivoFinal = '';
+
+    try {
+
+        // =========================
+        // SUBIR IMAGEN SI EXISTE
+        // =========================
+
+        const fileInput = document.getElementById('archivo-pub');
+
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+
+            const file = fileInput.files[0];
+
+            const safeName = file.name.replace(
+                /[^a-zA-Z0-9_.-]/g,
+                '_'
+            );
+
+            const path = `publicaciones-inicio/${Date.now()}_${safeName}`;
+
+            const {
+                data: uploadData,
+                error: uploadError
+            } = await supabaseClient.storage
+                .from('publicaciones')
+                .upload(path, file);
+
+            if (uploadError) {
+                console.error(
+                    '❌ Error subiendo imagen:',
+                    uploadError
+                );
+
+                mostrarError(
+                    'No fue posible subir la imagen.'
+                );
+
+                return;
+            }
+
+            console.log(
+                '✅ Imagen subida:',
+                uploadData
+            );
+
+            const {
+                data: publicData
+            } = supabaseClient.storage
+                .from('publicaciones')
+                .getPublicUrl(path);
+
+            archivoFinal =
+                publicData?.publicUrl || '';
+
+            console.log(
+                '🔗 URL pública:',
+                archivoFinal
+            );
         }
-        mostrarExito('✅ Publicación actualizada correctamente');
-        publicacionEditId = null;
-    } else {
-        const guardado = await DB.agregarPublicacionInicio(titulo, contenido);
-        if (!guardado) {
-            mostrarError('No fue posible guardar la publicación. Verifica la conexión con Supabase.');
-            return;
+
+        // =========================
+        // EDITAR PUBLICACIÓN
+        // =========================
+
+        if (publicacionEditId) {
+
+            const actualizado =
+                await DB.actualizarPublicacionInicio(
+                    publicacionEditId,
+                    titulo,
+                    contenido,
+                    archivoFinal
+                );
+
+            if (!actualizado) {
+                mostrarError(
+                    'No fue posible actualizar la publicación.'
+                );
+                return;
+            }
+
+            mostrarExito(
+                '✅ Publicación actualizada correctamente'
+            );
+
+            publicacionEditId = null;
+
+        } else {
+
+            // =========================
+            // CREAR PUBLICACIÓN
+            // =========================
+
+            const guardado =
+                await DB.agregarContenido(
+                    'inicio',
+                    titulo,
+                    contenido,
+                    archivoFinal
+                );
+
+            if (!guardado) {
+                mostrarError(
+                    'No fue posible guardar la publicación. Verifica la conexión con Supabase.'
+                );
+                return;
+            }
+
+            mostrarExito(
+                '✅ Publicación agregada correctamente'
+            );
         }
-        mostrarExito('✅ Publicación agregada correctamente');
+
+    } catch (error) {
+
+        console.error(
+            '❌ Error procesando publicación:',
+            error
+        );
+
+        mostrarError(
+            'Ocurrió un error al procesar la publicación.'
+        );
+
+        return;
     }
 
-    // Limpiar formulario
-    document.querySelector('.form-publicacion').reset();
+    // =========================
+    // LIMPIAR FORMULARIO
+    // =========================
+
+    document
+        .querySelector('.form-publicacion')
+        .reset();
+
     cancelarEdicionPublicacion();
 
-    // Actualizar vista
+    // =========================
+    // ACTUALIZAR VISTA
+    // =========================
+
     await cargarPublicacionesAdmin();
     await cargarEstadisticas();
 }
@@ -769,11 +965,10 @@ async function eliminarPublicacionInicio(id) {
 
 }
 // =========================
-// GESTIÓN DE COMENTARIOS - APROBACIÓN
+// GESTIÓN DE COMENTARIOS
 // =========================
 
 async function cargarComentariosAdmin() {
-
     const { data: todosCom, error } = await supabaseClient
         .from("comentarios")
         .select("*")
@@ -785,56 +980,134 @@ async function cargarComentariosAdmin() {
     }
 
     const lista = document.getElementById('comentarios-lista');
+    const totalLabel = document.getElementById('comentarios-total');
+    const searchInput = document.getElementById('buscar-comentarios');
+    const pagContainer = document.getElementById('comentarios-paginacion');
 
-    if (!lista) return;
+    if (!lista || !totalLabel || !searchInput || !pagContainer) return;
 
-    lista.innerHTML = '';
+    const comentarios = (todosCom || []).map(c => ({
+        ...c,
+        fecha: c.fecha || c.created_at || null,
+        mensaje: c.mensaje || c.comentario || '',
+        publicacion_titulo: `Publicación #${c.publicacion_id}`
+    }));
 
-    if (!todosCom || todosCom.length === 0) {
+    if (comentarios.length === 0) {
         lista.innerHTML = '<p class="sin-contenido">No hay comentarios aún.</p>';
+        totalLabel.textContent = 'Total comentarios: 0';
+        pagContainer.innerHTML = '';
         return;
     }
 
-    todosCom.forEach(c => {
+    let filtered = comentarios.slice();
+    let currentPage = 1;
+    const pageSize = 8;
 
-        const fecha = c.fecha
-            ? new Date(c.fecha).toLocaleDateString('es-ES')
-            : c.created_at
-                ? new Date(c.created_at).toLocaleDateString('es-ES')
-                : '';
+    function formatDate(fecha) {
+        if (!fecha) return '';
+        const d = new Date(fecha);
+        if (isNaN(d)) return '';
+        return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
 
-        const card = document.createElement('div');
+    function renderPage(page = 1) {
+        lista.innerHTML = '';
+        const start = (page - 1) * pageSize;
+        const pageItems = filtered.slice(start, start + pageSize);
 
-        card.className = 'comentario-card';
+        totalLabel.textContent = `Total comentarios: ${filtered.length}`;
 
-        card.innerHTML = `
-            <div class="comentario-header">
-                <h5>
-                    ${sanitizarHTML(c.nombre)}
-                    - Publicación #${c.publicacion_id}
-                </h5>
+        pageItems.forEach(c => {
+            const fecha = formatDate(c.fecha);
+            const card = document.createElement('article');
+            card.className = 'comentario-card';
+            card.innerHTML = `
+                <div class="comentario-header">
+                    <div>
+                        <h5>${sanitizarHTML(c.nombre)}</h5>
+                        <p class="comentario-publicacion">${sanitizarHTML(c.publicacion_titulo)}</p>
+                    </div>
+                    <span class="fecha">${sanitizarHTML(fecha)}</span>
+                </div>
+                <p class="comentario-texto">${sanitizarHTML(c.mensaje)}</p>
+                <div class="comentario-acciones">
+                    <button type="button" onclick="eliminarComentarioAdmin(${c.id})" class="btn-eliminar">🗑️ Eliminar</button>
+                </div>
+            `;
+            lista.appendChild(card);
+        });
 
-                <span class="fecha">${fecha}</span>
-            </div>
+        renderPagination(filtered.length, page);
+    }
 
-            <p>${sanitizarHTML(c.mensaje)}</p>
+    function renderPagination(total, page) {
+        pagContainer.innerHTML = '';
+        if (total <= pageSize) return;
 
-            <div class="comentario-acciones">
-                <button
-                    onclick="rechazarComentarioAdmin(${c.id})"
-                    class="btn-rechazado">
-                    🗑️ Eliminar
-                </button>
-            </div>
-        `;
+        const totalPages = Math.ceil(total / pageSize);
 
-        lista.appendChild(card);
-    });
+        const info = document.createElement('div');
+        info.className = 'pagin-info';
+        const startItem = Math.min((page - 1) * pageSize + 1, total);
+        const endItem = Math.min(page * pageSize, total);
+        info.textContent = `Mostrando ${startItem}–${endItem} de ${total}`;
+        pagContainer.appendChild(info);
+
+        const controls = document.createElement('div');
+        controls.className = 'pagin-controls';
+
+        const prev = document.createElement('button');
+        prev.textContent = 'Anterior';
+        prev.disabled = page <= 1;
+        prev.addEventListener('click', () => { if (page > 1) { currentPage -= 1; renderPage(currentPage); } });
+        controls.appendChild(prev);
+
+        const maxButtons = 5;
+        let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+        if (endPage - startPage + 1 < maxButtons) {
+            startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+
+        for (let p = startPage; p <= endPage; p++) {
+            const btn = document.createElement('button');
+            btn.textContent = String(p);
+            if (p === page) btn.className = 'active';
+            btn.addEventListener('click', () => { currentPage = p; renderPage(currentPage); });
+            controls.appendChild(btn);
+        }
+
+        const next = document.createElement('button');
+        next.textContent = 'Siguiente';
+        next.disabled = page >= totalPages;
+        next.addEventListener('click', () => { if (page < totalPages) { currentPage += 1; renderPage(currentPage); } });
+        controls.appendChild(next);
+
+        pagContainer.appendChild(controls);
+    }
+
+    searchInput.value = '';
+    searchInput.oninput = function () {
+        const query = (this.value || '').trim().toLowerCase();
+        currentPage = 1;
+        if (!query) {
+            filtered = comentarios.slice();
+        } else {
+            filtered = comentarios.filter(c =>
+                c.nombre.toLowerCase().includes(query) ||
+                c.mensaje.toLowerCase().includes(query) ||
+                c.publicacion_titulo.toLowerCase().includes(query)
+            );
+        }
+        renderPage(currentPage);
+    };
+
+    renderPage(currentPage);
 }
 
 
 async function eliminarComentarioAdmin(id) {
-
     if (!confirm("¿Eliminar este comentario? Esta acción no se puede deshacer.")) {
         return;
     }
@@ -1115,6 +1388,7 @@ async function guardarDocente(e) {
             'crear-usuario-admin',
             {
                 body: {
+                    accion: 'crear',
                     nombre: nombre,
                     email: email,
                     password: password,

@@ -438,6 +438,98 @@ header p {
     width:320px;
     font-size:14px;
 }
+
+.comentarios-panel {
+    display: grid;
+    gap: 18px;
+}
+
+.comentarios-filtro {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.comentarios-total {
+    color: #1b4332;
+    font-weight: 700;
+}
+
+.comentarios-lista {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 4px;
+    display: grid;
+    gap: 14px;
+}
+
+.comentario-card {
+    background: #ffffff;
+    border: 1px solid #e6e6e6;
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.comentario-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.comentario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.comentario-header h5 {
+    margin: 0;
+    font-size: 16px;
+    color: #1b4332;
+    font-weight: 700;
+}
+
+.comentario-publicacion {
+    margin: 6px 0 0;
+    color: #4a5d44;
+    font-size: 13px;
+}
+
+.comentario-texto {
+    margin: 0 0 16px;
+    color: #4a4f57;
+    line-height: 1.7;
+    font-size: 14px;
+    white-space: pre-wrap;
+}
+
+.comentario-acciones {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.comentario-acciones .btn-eliminar {
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+}
+
+@media (max-width: 860px) {
+    .comentarios-filtro {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .buscar-publicacion {
+        width: 100%;
+    }
+}
 .lista-rows{display:flex;flex-direction:column;gap:8px}
 .lista-row{display:grid;grid-template-columns:70px 1fr 140px 120px 80px 160px;gap:12px;align-items:center;padding:10px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfbfb);border:1px solid #f0f0f0}
 .lista-row.header{background:transparent;border:none;font-weight:700;color:#444}
@@ -447,9 +539,10 @@ header p {
 .lista-row .actions-col button{padding:6px 10px;border-radius:8px;border:none;cursor:pointer}
 .lista-row .actions-col .btn-ver{background:#2d6a4f;color:white}
 .lista-row .actions-col .btn-eliminar-list{background:#ff6b6b;color:white}
-.pagin-controls{display:flex;gap:6px;align-items:center;margin-top:8px}
-.pagin-controls button{padding:6px 10px;border-radius:6px;border:1px solid #e6e6e6;background:white;cursor:pointer}
+.pagin-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.pagin-controls button{padding:8px 12px;border-radius:10px;border:1px solid #e6e6e6;background:white;cursor:pointer;font-size:13px;min-width:46px}
 .pagin-controls button.active{background:#2d6a4f;color:white;border-color:transparent}
+.pagin-controls button:disabled{opacity:0.55;cursor:not-allowed}
 .pagin-info{color:#666;font-size:13px;margin-bottom:6px}
 
 /* Responsive: stack columns on small screens */
@@ -850,16 +943,6 @@ header p {
     margin-bottom: 15px;
 }
 
-.comentario-card.aprobado {
-    border-left-color: #4caf50;
-    background: #f1f8f6;
-}
-
-.comentario-card.pendiente {
-    border-left-color: #ffc107;
-    background: #fffef9;
-}
-
 .comentario-card:hover {
     box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
     transform: translateX(5px);
@@ -890,35 +973,6 @@ header p {
 .comentario-acciones {
     display: flex;
     gap: 10px;
-}
-
-.btn-aprobado,
-.btn-rechazado {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: 0.3s;
-    font-weight: bold;
-}
-
-.btn-aprobado {
-    background: #4caf50;
-    color: white;
-}
-
-.btn-aprobado:hover {
-    background: #45a049;
-}
-
-.btn-rechazado {
-    background: #f44336;
-    color: white;
-}
-
-.btn-rechazado:hover {
-    background: #d32f2f;
 }
 
 /* TÍTULOS DE SECCIONES */

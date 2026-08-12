@@ -55,7 +55,7 @@
                 📢 Publicaciones Inicio
             </button>
             <button onclick="cambiarPanel('comentarios')" class="panel-nav-btn" data-panel="comentarios">
-                💬 Aprobar Comentarios
+                💬 Gestionar Comentarios
             </button>
         </section>
 
@@ -199,28 +199,71 @@
         <!-- PANEL 2: PUBLICACIONES DEL INICIO -->
         <section id="panel-publicaciones" class="panel-seccion" style="display: none;">
             <!-- FORMULARIO DE PUBLICACIONES -->
-            <section class="formulario-seccion">
-                <h3>📢 Crear Nueva Publicación</h3>
-                <p class="descripcion-panel">Las publicaciones aparecerán en la página de inicio para que todos los estudiantes las vean</p>
+        <section class="formulario-seccion">
+            <h3>📢 Crear Nueva Publicación</h3>
 
-                <form onsubmit="guardarPublicacionInicio(event)" class="form-publicacion">
-                    
-                    <div class="form-grupo">
-                        <label for="titulo-pub">Título de la publicación:</label>
-                        <input type="text" id="titulo-pub" placeholder="Ej: Anuncio importante para todos" 
-                               maxlength="100" required aria-label="Título de la publicación">
-                    </div>
+            <p class="descripcion-panel">
+                Las publicaciones aparecerán en la página de inicio para que todos los estudiantes las vean
+            </p>
 
-                    <div class="form-grupo">
-                        <label for="contenido-pub">Contenido de la publicación:</label>
-                        <textarea id="contenido-pub" placeholder="Escribe el contenido de tu publicación..." 
-                                  maxlength="1000" required aria-label="Contenido de la publicación"></textarea>
-                        <small>Máximo 1000 caracteres</small>
-                    </div>
+            <form onsubmit="guardarPublicacionInicio(event)" class="form-publicacion">
 
-                    <button type="submit" class="btn-primario">Publicar</button>
-                </form>
-            </section>
+                <div class="form-grupo">
+                    <label for="titulo-pub">Título de la publicación:</label>
+
+                    <input
+                        type="text"
+                        id="titulo-pub"
+                        placeholder="Ej: Anuncio importante para todos"
+                        maxlength="100"
+                        required
+                        aria-label="Título de la publicación"
+                    >
+                </div>
+
+
+                <div class="form-grupo">
+                    <label for="contenido-pub">
+                        Contenido de la publicación:
+                    </label>
+
+                    <textarea
+                        id="contenido-pub"
+                        placeholder="Escribe el contenido de tu publicación..."
+                        maxlength="1000"
+                        required
+                        aria-label="Contenido de la publicación"
+                    ></textarea>
+
+                    <small>Máximo 1000 caracteres</small>
+                </div>
+
+
+                <!-- IMAGEN / ARCHIVO -->
+                <div class="form-grupo">
+                    <label for="archivo-pub">
+                        🖼️ Imagen de la publicación:
+                    </label>
+
+                    <input
+                        type="file"
+                        id="archivo-pub"
+                        accept="image/*"
+                        aria-label="Imagen de la publicación"
+                    >
+
+                    <small>
+                        Opcional. Puedes seleccionar una imagen para acompañar la publicación.
+                    </small>
+                </div>
+
+
+                <button type="submit" class="btn-primario">
+                    📢 Publicar
+                </button>
+
+            </form>
+        </section>
 
             <!-- PUBLICACIONES CARGADAS -->
             <section class="contenido-cargado">
@@ -231,13 +274,20 @@
             </section>
         </section>
 
-        <!-- PANEL 3: APROBACIÓN DE COMENTARIOS -->
+        <!-- PANEL 3: GESTIÓN DE COMENTARIOS -->
         <section id="panel-comentarios" class="panel-seccion" style="display: none;">
             <section class="contenido-cargado">
                 <h3>💬 Gestión de Comentarios de Estudiantes</h3>
-                <p class="descripcion-panel">Aquí puedes revisar y aprobar los comentarios de los estudiantes antes de que aparezcan en el sitio</p>
-                <div id="comentarios-lista" class="contenido-lista">
-                    <p class="sin-contenido">No hay comentarios aún</p>
+                <p class="descripcion-panel">Aquí puedes consultar y eliminar comentarios que incumplan las normas de convivencia del portal.</p>
+                <div class="comentarios-panel">
+                    <div class="comentarios-filtro">
+                        <span id="comentarios-total" class="comentarios-total">Total comentarios: 0</span>
+                        <input type="search" id="buscar-comentarios" class="buscar-publicacion" placeholder="🔎 Buscar por nombre, contenido o publicación" aria-label="Buscar comentarios">
+                    </div>
+                    <div id="comentarios-lista" class="comentarios-lista">
+                        <p class="sin-contenido">No hay comentarios aún</p>
+                    </div>
+                    <div id="comentarios-paginacion" class="contenido-paginacion"></div>
                 </div>
             </section>
         </section>
@@ -257,10 +307,6 @@
                 <div class="stat-card">
                     <h4>Secciones activas</h4>
                     <p id="stat-secciones" class="numero">0</p>
-                </div>
-                <div class="stat-card">
-                    <h4>Comentarios pendientes</h4>
-                    <p id="stat-pendientes" class="numero">0</p>
                 </div>
             </div>
         </section>

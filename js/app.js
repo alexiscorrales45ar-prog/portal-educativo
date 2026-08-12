@@ -74,26 +74,26 @@ const DB = {
         return true;
     },
 
-   obtenerPublicacionesInicio: async function() {
+    obtenerPublicacionesInicio: async function() {
 
-    console.log("🔎 Buscando publicaciones de inicio...");
+        console.log("🔎 Buscando publicaciones de inicio...");
 
-    const { data, error } = await supabaseClient
-        .from("publicaciones")
-        .select("*")
-        .eq("seccion", "inicio")
-        .order("id", { ascending: false });
+        const { data, error } = await supabaseClient
+            .from("publicaciones")
+            .select("*")
+            .eq("seccion", "inicio")
+            .order("id", { ascending: false });
 
-    console.log("📦 Datos inicio:", data);
-    console.log("❌ Error inicio:", error);
+        console.log("📦 Datos inicio:", data);
+        console.log("❌ Error inicio:", error);
 
-    if (error) {
-        console.error("❌ Error al obtener publicaciones de inicio:", error);
-        return [];
-    }
+        if (error) {
+            console.error("❌ Error al obtener publicaciones de inicio:", error);
+            return [];
+        }
 
-    return data || [];
-},
+        return data || [];
+    },
     
     eliminarPublicacionInicio: async function(id) {
 
@@ -112,27 +112,6 @@ const DB = {
         return true;
     },
 
-    agregarComentario: async function(publicacionId, nombre, mensaje) {
-        const { data, error } = await supabaseClient
-            .from('comentarios')
-            .insert([
-                {
-                    publicacion_id: publicacionId,
-                    nombre: nombre,
-                    mensaje: mensaje
-                }
-            ])
-            .select();
-
-        if (error) {
-            console.error('❌ Error al guardar comentario:', error);
-            return false;
-        }
-
-        console.log('✅ Comentario guardado en Supabase:', data);
-
-        return true;
-    },
     obtenerComentarios: async function(publicacionId) {
 
         const { data, error } = await supabaseClient
@@ -169,20 +148,6 @@ const DB = {
             fecha: item.fecha || item.created_at || null,
             mensaje: item.mensaje || item.comentario || ''
         }));
-    },
-    
-    aprobarComentario: async function(id) {
-        const { error } = await supabaseClient
-            .from('comentarios')
-            .update({ aprobado: true })
-            .eq('id', id);
-
-        if (error) {
-            console.error('❌ Error al aprobar comentario:', error);
-            return false;
-        }
-
-        return true;
     },
     
     rechazarComentario: async function(id) {
@@ -302,7 +267,7 @@ async function agregarComentario(publicacionId) {
     mensajeField.value = "";
 
     await cargarComentariosPublicacion(publicacionId);
-    mostrarExito("✅ Comentario enviado - Pendiente de aprobación del docente");
+    mostrarExito("✅ Comentario publicado correctamente");
 }
 
 async function cargarComentariosPublicacion(publicacionId) {
@@ -521,11 +486,9 @@ async function cargarPublicacionesInicio() {
             <p>${sanitizarHTML(item.descripcion)}</p>
 
             ${item.url_archivo ? `
-                <p>
-                    <a href="${item.url_archivo}" target="_blank">
-                        📎 Ver archivo
-                    </a>
-                </p>
+                <div class="publicacion-imagen">
+                    <img src="${sanitizarHTML(item.url_archivo)}" alt="Imagen de la publicación ${sanitizarHTML(item.titulo)}">
+                </div>
             ` : ""}
 
             <div id="comentarios-lista-${item.id}" class="contenedor-comentarios">
@@ -589,11 +552,14 @@ async function cargarPublicacionesSeccion(seccion) {
             <p>${sanitizarHTML(item.descripcion)}</p>
 
             ${item.url_archivo ? `
-                <p>
-                    <a href="${item.url_archivo}" target="_blank">
-                        📎 Ver archivo
-                    </a>
-                </p>
+                <div class="publicacion-imagen">
+                    <img 
+                        src="${item.url_archivo}" 
+                        alt="${sanitizarHTML(item.titulo)}"
+                        loading="lazy"
+                        onerror="this.parentElement.style.display='none';"
+                    >
+                </div>
             ` : ""}
 
             <div id="comentarios-lista-${item.id}" class="contenedor-comentarios">
