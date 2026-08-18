@@ -84,7 +84,9 @@ function mostrarLogin() {
                            aria-label="Usuario o correo electrónico">
                     <input type="password" id="pass-login" placeholder="Contraseña" required 
                            aria-label="Contraseña">
-                    <p class="login-recover">¿Olvidaste tu contraseña?</p>
+                    <p class="login-recover" onclick="recuperarContraseña()">
+                        ¿Olvidaste tu contraseña?
+                    </p>
                     <button type="submit" class="btn-primario">Entrar</button>
                 </form>
 
@@ -93,7 +95,26 @@ function mostrarLogin() {
         </div>
     `;
 }
+async function recuperarContraseña() {
+    const email = document.getElementById('usuario-login').value.trim();
 
+    if (!email) {
+        alert('Escribe primero tu correo electrónico.');
+        return;
+    }
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/recuperar-password.html'
+    });
+
+    if (error) {
+        console.error('❌ Error al recuperar contraseña:', error);
+        alert('No se pudo enviar el correo: ' + error.message);
+        return;
+    }
+
+    alert('Se ha enviado un enlace para restablecer la contraseña a tu correo.');
+}
 async function iniciarSesion(e) {
     e.preventDefault();
 
@@ -142,6 +163,7 @@ async function iniciarSesion(e) {
         alert('Ocurrió un error al intentar iniciar sesión.');
     }
 }
+
 function mostrarPanelAdmin() {
     // Cambiar contenido del panel para admin
     let header = document.querySelector('.admin-header p');
