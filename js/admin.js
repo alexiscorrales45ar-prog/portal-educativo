@@ -104,7 +104,7 @@ async function recuperarContraseña() {
     }
 
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/recuperar-password.html'
+    redirectTo: window.location.origin + '/paginas/recuperar-password.html'
     });
 
     if (error) {
