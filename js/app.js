@@ -587,41 +587,35 @@ async function cargarPublicacionesSeccion(seccion) {
     }
 }
 
-// Cargar publicaciones al entrar a página inicio
-if(window.location.pathname.includes('index.html') || window.location.pathname.endsWith('/')) {
-    document.addEventListener('DOMContentLoaded', cargarPublicacionesInicio);
-}
-
-// Cargar publicaciones de arte
-if(window.location.pathname.includes('arte.html')) {
-    document.addEventListener('DOMContentLoaded', () => cargarPublicacionesSeccion('arte'));
-}
-// Cargar publicaciones de literatura
-if(window.location.pathname.includes('literatura.html')) {
-    document.addEventListener('DOMContentLoaded', () => cargarPublicacionesSeccion('literatura'));
-}
-
-// Cargar publicaciones de convivencia
-if(window.location.pathname.includes('convivencia.html')) {
-    document.addEventListener('DOMContentLoaded', () => cargarPublicacionesSeccion('convivencia'));
-}
-
-// Cargar publicaciones de eventos
-if(window.location.pathname.includes('eventos.html')) {
-    document.addEventListener('DOMContentLoaded', () => cargarPublicacionesSeccion('eventos'));
-
-}
-
-
-// Cargar publicaciones de convivencia
-if(window.location.pathname.includes('convivencia.html')) {
-    console.log("🟢 Detectó convivencia.html");
-
+// Cargar publicaciones de Arte
+if (window.location.pathname.includes('/paginas/arte')) {
     document.addEventListener('DOMContentLoaded', () => {
-        console.log("🟢 Ejecutando cargarPublicacionesSeccion('convivencia')");
+        cargarPublicacionesSeccion('arte');
+    });
+}
+
+// Cargar publicaciones de Literatura
+if (window.location.pathname.includes('/paginas/literatura')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarPublicacionesSeccion('literatura');
+    });
+}
+
+// Cargar publicaciones de Convivencia
+if (window.location.pathname.includes('/paginas/convivencia')) {
+    document.addEventListener('DOMContentLoaded', () => {
         cargarPublicacionesSeccion('convivencia');
     });
 }
+
+// Cargar publicaciones de Eventos
+if (window.location.pathname.includes('/paginas/eventos')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarPublicacionesSeccion('eventos');
+    });
+}
+
+
 
 // ===== PRUEBA =====
 // obtenerPublicaciones();
