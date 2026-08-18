@@ -187,9 +187,21 @@ const DB = {
         return true;
     },
     
-    obtenerContenido: function(seccion) {
-        let contenido = JSON.parse(localStorage.getItem('colegio_contenido')) || {};
-        return contenido[seccion] || [];
+    obtenerContenido: async function(seccion) {
+
+        const { data, error } = await supabaseClient
+            .from("publicaciones")
+            .select("*")
+            .eq("seccion", seccion)
+            .eq("visible", true)
+            .order("id", { ascending: false });
+
+        if (error) {
+            console.error("❌ Error al obtener contenido:", error);
+            return [];
+        }
+
+        return data || [];
     }
 };
 

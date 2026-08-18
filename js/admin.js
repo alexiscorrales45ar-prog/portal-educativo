@@ -417,6 +417,7 @@ async function guardarContenido(e) {
 }
 
 async function mostrarSeccion(seccion) {
+    console.log("🔎 Sección seleccionada:", seccion);
 
     seccionActual = seccion;
 
@@ -433,6 +434,8 @@ async function mostrarSeccion(seccion) {
         .select("*")
         .eq("seccion", seccion)
         .order("id", { ascending: false });
+    console.log("📚 Publicaciones encontradas:", data);
+    console.log("❌ Error:", error);
 
     if (error) {
         console.error(error);
